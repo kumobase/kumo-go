@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.1]
+
+### Added
+- `codes/registry.go` — `REGISTRY_REPOSITORY_SYSTEM_OWNED`, returned when a
+  user tries to delete a platform-owned (auto-provisioned) repository, such as
+  the registry repo backing a git-build app.
+
+### Changed
+- `version.SDKVersion` bumped to `v0.4.1`.
+
 ## [v0.4.0]
 
 ### Added

@@ -16,6 +16,11 @@ const (
 	RegistrySuspended         = "REGISTRY_SUSPENDED"
 	RegistryMaxRepositoriesReached = "REGISTRY_MAX_REPOSITORIES_REACHED"
 
+	// RegistryRepositorySystemOwned — the repository is owned by the platform
+	// (e.g. auto-provisioned for a git-build app) and cannot be deleted via the
+	// user API. It is removed automatically when its owning resource is deleted.
+	RegistryRepositorySystemOwned = "REGISTRY_REPOSITORY_SYSTEM_OWNED"
+
 	RegistryUnauthorized  = "REGISTRY_UNAUTHORIZED"
 	RegistryForbidden     = "REGISTRY_FORBIDDEN"
 	RegistryInternalError = "REGISTRY_INTERNAL_ERROR"
