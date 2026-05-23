@@ -231,3 +231,47 @@ type ValidateImagePullableResponse struct {
 	LinuxAmd64 bool `json:"linux_amd64"`
 	LinuxArm64 bool `json:"linux_arm64"`
 }
+
+// AppOperationActionType discriminates the kind of async operation a
+// row in /apps/:id/operations represents.
+type AppOperationActionType string
+
+const (
+	AppOperationActionCreate  AppOperationActionType = "create"
+	AppOperationActionUpdate  AppOperationActionType = "update"
+	AppOperationActionDelete  AppOperationActionType = "delete"
+	AppOperationActionRestart AppOperationActionType = "restart"
+	AppOperationActionStart   AppOperationActionType = "start"
+	AppOperationActionStop    AppOperationActionType = "stop"
+)
+
+// AppOperationStatus is the lifecycle state of an async app operation.
+// "succeeded", "failed", and "cancelled" are terminal.
+type AppOperationStatus string
+
+const (
+	AppOperationStatusQueued     AppOperationStatus = "queued"
+	AppOperationStatusInProgress AppOperationStatus = "in_progress"
+	AppOperationStatusSucceeded  AppOperationStatus = "succeeded"
+	AppOperationStatusFailed     AppOperationStatus = "failed"
+	AppOperationStatusCancelled  AppOperationStatus = "cancelled"
+)
+
+// AppOperation is one row of /api/v1/apps/:id/operations. Returned in
+// CreateAppResponse.OperationID (UUID) and as the polling response from
+// GET /api/v1/apps/:id/operations/:operation_id.
+//
+// ErrorCode is the wire code (see github.com/kumobase/kumo-go/codes/apps)
+// that failed the operation, when Status == "failed".
+type AppOperation struct {
+	OperationID string                 `json:"operation_id"` // UUID
+	AppID       uint                   `json:"app_id"`
+	ActionType  AppOperationActionType `json:"action_type"`
+	Status      AppOperationStatus     `json:"status"`
+	ErrorCode   *string                `json:"error_code,omitempty"`
+	ErrorMsg    *string                `json:"error_message,omitempty"`
+	RequestedBy *string                `json:"requested_by,omitempty"` // "api_key" / "bearer_jwt" / "cookie"
+	QueuedAt    time.Time              `json:"queued_at"`
+	StartedAt   *time.Time             `json:"started_at,omitempty"`
+	CompletedAt *time.Time             `json:"completed_at,omitempty"`
+}
