@@ -169,4 +169,16 @@ func TestAPIKeys_RoundTrip(t *testing.T) {
 	})
 }
 
+func TestSourceConnect_RoundTrip(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	roundTrip(t, "SourceConnectionResponse", SourceConnectionResponse{
+		ID: 1, Provider: SourceProviderGitHub, InstallationID: 12345,
+		AccountLogin: "acme", AccountType: "Organization",
+		Status: SourceConnectionStatusActive, CreatedAt: now, UpdatedAt: now,
+	})
+	roundTrip(t, "SourceRepoResponse", SourceRepoResponse{
+		ID: 99, FullName: "acme/web", Private: true, DefaultBranch: "main",
+	})
+}
+
 func intPtr(v int) *int { return &v }

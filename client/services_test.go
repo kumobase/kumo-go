@@ -264,6 +264,41 @@ func TestProfile_Smoke(t *testing.T) {
 	}
 }
 
+// ── SourceConnections ────────────────────────────────────────────────
+
+func TestSourceConnections_Smoke(t *testing.T) {
+	type call struct{ method, path string }
+	var seen call
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = call{r.Method, r.URL.Path}
+		switch {
+		case r.Method == "GET" && r.URL.Path == "/api/v1/source-connections":
+			fmt.Fprint(w, `{"message":"ok","data":[{"id":1,"provider":"github","installation_id":12345,"account_login":"acme","account_type":"Organization","status":"active","created_at":"2026-05-23T10:00:00Z","updated_at":"2026-05-23T10:00:00Z"}]}`)
+		case r.Method == "GET" && r.URL.Path == "/api/v1/source-connections/1/repos":
+			fmt.Fprint(w, `{"message":"ok","data":[{"id":99,"full_name":"acme/web","private":true,"default_branch":"main"}]}`)
+		case r.Method == "DELETE":
+			writeStruct(w, 200, "", "ok", &types.SourceConnectionResponse{ID: 1, Provider: types.SourceProviderGitHub, Status: types.SourceConnectionStatusActive})
+		}
+	})
+	ctx := context.Background()
+
+	conns, err := c.SourceConnections().List(ctx)
+	if err != nil || len(conns) != 1 || conns[0].AccountLogin != "acme" {
+		t.Fatalf("List: %v (%+v)", err, conns)
+	}
+	repos, err := c.SourceConnections().ListRepos(ctx, 1)
+	if err != nil || len(repos) != 1 || repos[0].FullName != "acme/web" {
+		t.Fatalf("ListRepos: %v (%+v)", err, repos)
+	}
+	disc, err := c.SourceConnections().Disconnect(ctx, 1)
+	if err != nil || disc.ID != 1 {
+		t.Fatalf("Disconnect: %v (%+v)", err, disc)
+	}
+	if seen.method != "DELETE" || seen.path != "/api/v1/source-connections/1" {
+		t.Errorf("last call: %s %s, want DELETE /api/v1/source-connections/1", seen.method, seen.path)
+	}
+}
+
 // ── APIKeys (sessionOnly) ────────────────────────────────────────────
 
 func TestAPIKeys_SessionOnlyErrorSurfaces(t *testing.T) {
