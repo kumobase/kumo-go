@@ -64,7 +64,7 @@ type ManifestResponse struct {
 	Digest    string    `json:"digest"`
 	Tag       *string   `json:"tag,omitempty"`
 	MediaType string    `json:"media_type"`
-	SizeBytes int64     `json:"size_bytes"`
+	SizeBytes int64     `json:"size_bytes"` // size of the manifest document itself
 	PushedAt  time.Time `json:"pushed_at"`
 
 	ConfigDigest   *string            `json:"config_digest,omitempty"`
@@ -76,6 +76,11 @@ type ManifestResponse struct {
 	ImageCreatedAt *time.Time         `json:"image_created_at,omitempty"`
 	Labels         map[string]string  `json:"labels,omitempty"`
 	LayerCount     *int               `json:"layer_count,omitempty"`
+	// ImageSizeBytes is the total compressed image size — the sum of the
+	// manifest's layer blob sizes (config excluded), the figure registries
+	// like Docker Hub display. Populated at hydration for image manifests;
+	// 0/omitted for manifest indexes and not-yet-hydrated rows.
+	ImageSizeBytes int64              `json:"image_size_bytes,omitempty"`
 	Platforms      []ManifestPlatform `json:"platforms,omitempty"`
 	HydratedAt     *time.Time         `json:"hydrated_at,omitempty"`
 	HydrationError *string            `json:"hydration_error,omitempty"`

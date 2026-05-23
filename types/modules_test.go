@@ -95,7 +95,7 @@ func TestRegistry_RoundTrip(t *testing.T) {
 	})
 	roundTrip(t, "ManifestResponse", ManifestResponse{
 		ID: 1, Digest: "sha256:abc", MediaType: "application/vnd.oci.image.manifest.v1+json",
-		SizeBytes: 1024, PushedAt: now,
+		SizeBytes: 1024, ImageSizeBytes: 162203697, PushedAt: now,
 	})
 }
 
