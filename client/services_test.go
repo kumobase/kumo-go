@@ -299,6 +299,56 @@ func TestSourceConnections_Smoke(t *testing.T) {
 	}
 }
 
+// ── Builds (git-build apps) ──────────────────────────────────────────
+
+func TestBuilds_Smoke(t *testing.T) {
+	type call struct{ method, path string }
+	var seen call
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = call{r.Method, r.URL.Path}
+		switch {
+		case r.Method == "POST" && r.URL.Path == "/api/v1/source-connections/1/apps":
+			writeStruct(w, 202, "", "queued", &types.CreateAppResponse{ID: 7, Name: "my-app", GenerateAppName: "my-appx4z8a1b2"})
+		case r.Method == "GET" && r.URL.Path == "/api/v1/apps/7/builds":
+			fmt.Fprint(w, `{"message":"ok","data":[{"id":3,"app_id":7,"commit_sha":"abc","ref":"refs/heads/main","status":"succeeded","image_digest":"sha256:x","created_at":"2026-05-23T10:00:00Z"}],"meta":{"page":1,"page_size":20,"total_items":1,"total_pages":1}}`)
+		case r.Method == "GET" && r.URL.Path == "/api/v1/apps/7/builds/3":
+			writeStruct(w, 200, "", "ok", &types.BuildResponse{ID: 3, AppID: 7, Status: types.BuildStatusSucceeded, LogURL: "https://logs/3.txt?sig=x"})
+		case r.Method == "POST" && r.URL.Path == "/api/v1/apps/7/builds":
+			writeStruct(w, 202, "", "queued", &types.BuildResponse{ID: 4, AppID: 7, Status: types.BuildStatusPending})
+		case r.Method == "POST" && r.URL.Path == "/api/v1/apps/7/builds/4/cancel":
+			writeStruct(w, 200, "", "ok", &types.BuildResponse{ID: 4, AppID: 7, Status: types.BuildStatusCanceled})
+		}
+	})
+	ctx := context.Background()
+
+	created, err := c.Builds().CreateGitBuildApp(ctx, 1, &types.CreateGitBuildAppRequest{
+		Name: "my-app", Port: 8080, IsExposed: true, Replicas: 1,
+		RepoFullName: "acme/web", Branch: "main", PricingSlug: "kumo.nano",
+	})
+	if err != nil || created.ID != 7 {
+		t.Fatalf("CreateGitBuildApp: %v (%+v)", err, created)
+	}
+	builds, _, err := c.Builds().List(ctx, 7)
+	if err != nil || len(builds) != 1 || builds[0].Status != types.BuildStatusSucceeded {
+		t.Fatalf("List: %v (%+v)", err, builds)
+	}
+	got, err := c.Builds().Get(ctx, 7, 3)
+	if err != nil || got.LogURL == "" {
+		t.Fatalf("Get: %v (%+v)", err, got)
+	}
+	rebuilt, err := c.Builds().Rebuild(ctx, 7)
+	if err != nil || rebuilt.ID != 4 {
+		t.Fatalf("Rebuild: %v (%+v)", err, rebuilt)
+	}
+	canceled, err := c.Builds().Cancel(ctx, 7, 4)
+	if err != nil || canceled.Status != types.BuildStatusCanceled {
+		t.Fatalf("Cancel: %v (%+v)", err, canceled)
+	}
+	if seen.method != "POST" || seen.path != "/api/v1/apps/7/builds/4/cancel" {
+		t.Errorf("last call: %s %s, want POST /api/v1/apps/7/builds/4/cancel", seen.method, seen.path)
+	}
+}
+
 // ── APIKeys (sessionOnly) ────────────────────────────────────────────
 
 func TestAPIKeys_SessionOnlyErrorSurfaces(t *testing.T) {

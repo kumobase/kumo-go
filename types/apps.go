@@ -168,6 +168,11 @@ type AppByIdResponse struct {
 	GeneratedSubDomain string `json:"generated_sub_domain"`
 	TLSSecretId        *uint  `json:"tls_secret_id,omitempty"`
 
+	// Source distinguishes a normal "registry-image" app from a "git-build"
+	// app whose image is produced by the platform. For git-build apps the
+	// Image field is system-owned and cannot be changed via PATCH.
+	Source AppSource `json:"source"`
+
 	// Suspension state
 	IsSuspended   bool   `json:"is_suspended"`
 	SuspendReason string `json:"suspend_reason,omitempty"`
@@ -203,6 +208,10 @@ type AppImageResponse struct {
 	Id uint `json:"id"`
 	CreateAppRequest
 	GeneratedSubDomain string `json:"generated_sub_domain"`
+
+	// Source distinguishes "registry-image" from "git-build" apps. See
+	// AppByIdResponse.Source.
+	Source AppSource `json:"source"`
 
 	IsSuspended   bool   `json:"is_suspended"`
 	SuspendReason string `json:"suspend_reason,omitempty"`

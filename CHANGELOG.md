@@ -6,6 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.0]
+
+### Added
+- `types/build.go` — git-build app surface: `BuildResponse`, `BuildStatus`
+  enum, `CreateGitBuildAppRequest`, and the `AppSource` enum
+  (`registry-image` | `git-build`).
+- `types/apps.go` — `Source` field on `AppByIdResponse` and
+  `AppImageResponse` (additive; defaults to `registry-image`).
+- `codes/build.go` — build wire codes: `BUILD_NOT_FOUND`,
+  `BUILD_APP_IMAGE_IMMUTABLE`, `BUILD_CONNECTION_REQUIRED`,
+  `BUILD_CONNECTION_IN_USE`, `BUILD_SOURCE_UNAVAILABLE`,
+  `BUILD_ALREADY_RUNNING`, `BUILD_PROVIDER_ERROR`, `BUILD_INTERNAL_ERROR`.
+- `client/build.go` — `client.Builds()` service: `CreateGitBuildApp(connID, …)`
+  plus `List` / `Get` / `Rebuild` / `Cancel` for an app's builds.
+
+### Changed
+- `version.SDKVersion` bumped to `v0.4.0`.
+
 ## [v0.2.0]
 
 ### Added

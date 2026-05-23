@@ -181,4 +181,23 @@ func TestSourceConnect_RoundTrip(t *testing.T) {
 	})
 }
 
+func TestBuild_RoundTrip(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
+	started := now.Add(time.Minute)
+	finished := now.Add(5 * time.Minute)
+	roundTrip(t, "BuildResponse", BuildResponse{
+		ID: 1, AppID: 7, CommitSHA: "abc123", Ref: "refs/heads/main",
+		Status: BuildStatusSucceeded, ImageDigest: "sha256:deadbeef",
+		LogURL: "https://logs.kumo.run/builds/1.txt?sig=x",
+		CreatedAt: now, StartedAt: &started, FinishedAt: &finished,
+	})
+	roundTrip(t, "CreateGitBuildAppRequest", CreateGitBuildAppRequest{
+		Name: "my-app", Port: 8080, IsExposed: true, Replicas: 2,
+		RepoFullName: "acme/web", Branch: "main",
+		EnvironmentVariables: []EnvironmentVariable{{Key: "FOO", Value: "bar"}},
+		PricingSlug:          "kumo.nano",
+		HealthCheck:          &HealthCheck{Type: "http", Path: "/health", Port: 8080},
+	})
+}
+
 func intPtr(v int) *int { return &v }
