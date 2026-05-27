@@ -34,4 +34,17 @@ const (
 	// InvalidFilterCombination — mutually exclusive list filters were
 	// supplied together (e.g. both app_id and attached on /volumes).
 	InvalidFilterCombination = "INVALID_FILTER_COMBINATION"
+
+	// AmbiguousName — a resource was addressed by a name (rather than its
+	// numeric id) that matches more than one resource in the caller's scope.
+	// Re-issue the request using the numeric id to disambiguate. Appears on
+	// endpoints that accept an id-or-name path segment (apps, secrets,
+	// volumes) and on *_name body fields (e.g. secret_name on app attach).
+	AmbiguousName = "AMBIGUOUS_NAME"
+
+	// InvalidResourceName — a create or rename supplied a name that violates
+	// the resource naming rule: lowercase, must start with a letter, and
+	// contain only letters, digits, and hyphens (an RFC-1035 label, max 63
+	// chars). The all-numeric exclusion keeps names unambiguous against ids.
+	InvalidResourceName = "INVALID_RESOURCE_NAME"
 )

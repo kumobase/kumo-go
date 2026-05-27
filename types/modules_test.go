@@ -22,6 +22,14 @@ func TestApps_RoundTrip(t *testing.T) {
 		SecretVars:           []SecretVar{{SecretId: 1, RestartWhenUpdated: true}},
 		HealthCheck:          &HealthCheck{Type: "http", Path: "/health", Port: 8080},
 	})
+	// Secret references by name (the id-or-name attach path). Kept as
+	// standalone round-trips so omitempty on secret_id/secret_name is
+	// exercised in both directions.
+	roundTrip(t, "SecretVar/byName", SecretVar{SecretName: "db-creds", RestartWhenUpdated: true})
+	roundTrip(t, "SecretVar/byID", SecretVar{SecretId: 3})
+	roundTrip(t, "SecretFileMount/byName", SecretFileMount{
+		Type: SecretFileMountTypeSecretFile, MountTo: "/etc/tls/cert.pem", SecretName: "tls-cert",
+	})
 	roundTrip(t, "CreateAppResponse", CreateAppResponse{
 		ID: 7, Name: "my-app", GenerateAppName: "my-app-x4z",
 		DeploymentStatus: string(AppDeploymentStatusDeploying),

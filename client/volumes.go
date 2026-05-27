@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/kumobase/kumo-go/types"
 )
@@ -25,6 +26,19 @@ func (c *Client) Volumes() *VolumesService { return &VolumesService{c: c} }
 func (s *VolumesService) Get(ctx context.Context, id uint) (*types.VolumeResponse, string, error) {
 	var out types.VolumeResponse
 	etag, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/volumes/%d", id), nil, nil, &out)
+	if err != nil {
+		return nil, "", err
+	}
+	return &out, etag, nil
+}
+
+// GetByName fetches a volume by its name instead of its numeric id, hitting
+// the same endpoint as Get (the server resolves a non-numeric path segment as
+// a name). Returns 409 AMBIGUOUS_NAME if more than one volume shares the name
+// — fall back to Get(ctx, id) to disambiguate. Returns the ETag like Get.
+func (s *VolumesService) GetByName(ctx context.Context, name string) (*types.VolumeResponse, string, error) {
+	var out types.VolumeResponse
+	etag, _, err := s.c.do(ctx, "GET", "/api/v1/volumes/"+url.PathEscape(name), nil, nil, &out)
 	if err != nil {
 		return nil, "", err
 	}

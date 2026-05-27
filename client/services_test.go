@@ -113,6 +113,41 @@ func TestVolumes_ResizeAndWait(t *testing.T) {
 	}
 }
 
+// ── Name addressing (id-or-name) ─────────────────────────────────────
+
+// GetByName must hit the same detail endpoint as Get with the name in the
+// path segment (the server resolves a non-numeric segment as a name).
+func TestNameAddressing_GetByName(t *testing.T) {
+	var seen string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = r.URL.Path
+		switch r.URL.Path {
+		case "/api/v1/apps/my-api":
+			writeStruct(w, 200, "", "ok", &types.AppByIdResponse{Id: 7})
+		case "/api/v1/secrets/db-creds":
+			writeStruct(w, 200, "", "ok", &types.ResponseGetSecret{ID: 8, Name: "db-creds", Type: types.SecretTypeEnvVar})
+		case "/api/v1/volumes/data-vol":
+			writeStruct(w, 200, "", "ok", &types.VolumeResponse{ID: 9, Name: "data-vol", Status: "ready"})
+		default:
+			writeStruct(w, 404, codes.AppNotFound, "not found", nil)
+		}
+	})
+	ctx := context.Background()
+
+	if app, _, err := c.Apps().GetByName(ctx, "my-api"); err != nil || app.Id != 7 {
+		t.Fatalf("Apps.GetByName: %v (%+v)", err, app)
+	}
+	if sec, _, err := c.Secrets().GetByName(ctx, "db-creds"); err != nil || sec.ID != 8 {
+		t.Fatalf("Secrets.GetByName: %v (%+v)", err, sec)
+	}
+	if vol, _, err := c.Volumes().GetByName(ctx, "data-vol"); err != nil || vol.ID != 9 {
+		t.Fatalf("Volumes.GetByName: %v (%+v)", err, vol)
+	}
+	if seen != "/api/v1/volumes/data-vol" {
+		t.Errorf("last path = %q, want /api/v1/volumes/data-vol", seen)
+	}
+}
+
 // ── VPS ──────────────────────────────────────────────────────────────
 
 func TestVPS_Smoke(t *testing.T) {

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/kumobase/kumo-go/types"
 )
@@ -26,6 +27,20 @@ func (c *Client) Secrets() *SecretsService { return &SecretsService{c: c} }
 func (s *SecretsService) Get(ctx context.Context, id uint) (*types.ResponseGetSecret, string, error) {
 	var out types.ResponseGetSecret
 	etag, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/secrets/%d", id), nil, nil, &out)
+	if err != nil {
+		return nil, "", err
+	}
+	return &out, etag, nil
+}
+
+// GetByName fetches a secret by its name instead of its numeric id, hitting
+// the same detail endpoint as Get (the server resolves a non-numeric path
+// segment as a name). Returns 409 AMBIGUOUS_NAME if more than one secret
+// shares the name — fall back to Get(ctx, id) to disambiguate. Returns the
+// ETag like Get.
+func (s *SecretsService) GetByName(ctx context.Context, name string) (*types.ResponseGetSecret, string, error) {
+	var out types.ResponseGetSecret
+	etag, _, err := s.c.do(ctx, "GET", "/api/v1/secrets/"+url.PathEscape(name), nil, nil, &out)
 	if err != nil {
 		return nil, "", err
 	}

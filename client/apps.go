@@ -114,6 +114,20 @@ func (s *AppsService) Get(ctx context.Context, id uint) (*types.AppByIdResponse,
 	return &out, etag, nil
 }
 
+// GetByName fetches an app by its name instead of its numeric id. The server
+// resolves the path segment as a name whenever it is not all-numeric, so this
+// hits the same endpoint as Get. Returns 409 AMBIGUOUS_NAME if more than one
+// app shares the name (possible until server-side uniqueness is enforced) —
+// fall back to Get(ctx, id) to disambiguate. Like Get, it returns the ETag.
+func (s *AppsService) GetByName(ctx context.Context, name string) (*types.AppByIdResponse, string, error) {
+	var out types.AppByIdResponse
+	etag, _, err := s.c.do(ctx, "GET", "/api/v1/apps/"+url.PathEscape(name), nil, nil, &out)
+	if err != nil {
+		return nil, "", err
+	}
+	return &out, etag, nil
+}
+
 // List returns one paginated page of apps and the pagination metadata.
 // To iterate all pages: bump opts page until *Meta.TotalPages.
 func (s *AppsService) List(ctx context.Context, opts ...ListOption) ([]types.AppImageResponse, *types.Meta, error) {

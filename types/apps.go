@@ -55,9 +55,16 @@ const (
 )
 
 // SecretVar mounts a Kumo Secret as an environment variable inside the app.
+//
+// Identify the secret by exactly one of SecretId or SecretName. The server
+// returns 400 VALIDATION_FAILED if neither (or both) is set, and 409
+// AMBIGUOUS_NAME if a SecretName matches more than one of the caller's
+// secrets (possible until server-side name uniqueness is enforced) — pass
+// SecretId to disambiguate.
 type SecretVar struct {
-	SecretId           uint `json:"secret_id"`
-	RestartWhenUpdated bool `json:"restart_when_updated"`
+	SecretId           uint   `json:"secret_id,omitempty"`
+	SecretName         string `json:"secret_name,omitempty"`
+	RestartWhenUpdated bool   `json:"restart_when_updated"`
 }
 
 // SecretFileMount projects the contents of a Kumo Secret as a file at
@@ -66,9 +73,11 @@ type SecretFileMount struct {
 	Type    SecretFileMountType `json:"type"`
 	MountTo string              `json:"mount_to"`
 
-	// SecretId is required when Type == "secret_file".
-	SecretId           uint `json:"secret_id,omitempty"`
-	RestartWhenUpdated bool `json:"restart_when_updated"`
+	// Identify the secret by exactly one of SecretId or SecretName (same
+	// semantics as SecretVar). Required when Type == "secret_file".
+	SecretId           uint   `json:"secret_id,omitempty"`
+	SecretName         string `json:"secret_name,omitempty"`
+	RestartWhenUpdated bool   `json:"restart_when_updated"`
 }
 
 // BaseCreateApp is the shared shape for app create/update. Server validation:
