@@ -98,3 +98,15 @@ type CreateGitBuildAppRequest struct {
 	SecretFileMounts     []SecretFileMount     `json:"secret_file_mounts,omitempty"`
 	HealthCheck          *HealthCheck          `json:"healthcheck,omitempty"`
 }
+
+// UpdateBuildConfigRequest is the body for PATCH /api/v1/apps/:id/build-config.
+// It replaces the build preset of an existing git-build app — the three fields
+// are set wholesale (an empty OutputDir/BuildCommand clears them), so send the
+// full intended state, not a partial diff. Changes apply on the NEXT build
+// (this does not trigger one). Switching Language to "static" forces the app's
+// port to 8080 (nginx). Supports optional If-Match for optimistic concurrency.
+type UpdateBuildConfigRequest struct {
+	Language     string `json:"language,omitempty"`      // "auto" (default) | a language | "static"
+	OutputDir    string `json:"output_dir,omitempty"`    // static only → BP_WEB_SERVER_ROOT
+	BuildCommand string `json:"build_command,omitempty"` // static only → BP_NODE_RUN_SCRIPTS (npm script)
+}

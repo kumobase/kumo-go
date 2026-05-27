@@ -204,6 +204,9 @@ func TestBuild_RoundTrip(t *testing.T) {
 		PricingSlug:          "kumo.nano",
 		HealthCheck:          &HealthCheck{Type: "http", Path: "/health", Port: 8080},
 	})
+	roundTrip(t, "UpdateBuildConfigRequest", UpdateBuildConfigRequest{
+		Language: "static", OutputDir: "dist", BuildCommand: "build",
+	})
 }
 
 func intPtr(v int) *int { return &v }
