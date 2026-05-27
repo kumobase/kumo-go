@@ -29,9 +29,11 @@ func TestApps_RoundTrip(t *testing.T) {
 		UpdatedAt:        now,
 	})
 	roundTrip(t, "AppByIdResponse", AppByIdResponse{
-		Id:               1,
-		CreateAppRequest: CreateAppRequest{BaseCreateApp: BaseCreateApp{Name: "x", Image: "nginx", Port: 80, Replicas: 1}, PricingSlug: "kumo.nano"},
+		Id:                 1,
+		CreateAppRequest:   CreateAppRequest{BaseCreateApp: BaseCreateApp{Name: "x", Image: "nginx", Port: 80, Replicas: 1}, PricingSlug: "kumo.nano"},
 		GeneratedSubDomain: "x.kumo.run",
+		Source:             AppSourceGitBuild,
+		Language:           "nodejs",
 		AppStatus:          "running",
 		StatusMessage:      "all good",
 		DesiredReplicas:    1, ReadyReplicas: 1,
@@ -58,7 +60,7 @@ func TestVPS_RoundTrip(t *testing.T) {
 func TestSecrets_RoundTrip(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	roundTrip(t, "CreateSecretRequest", CreateSecretRequest{
-		RequestSecretBase: RequestSecretBase{Name: "db-creds", Type: SecretTypeEnvVar},
+		RequestSecretBase:    RequestSecretBase{Name: "db-creds", Type: SecretTypeEnvVar},
 		EnvironmentVariables: []EnvironmentVariable{{Key: "DB_URL", Value: "postgres://x"}},
 	})
 	roundTrip(t, "ResponseGetSecret", ResponseGetSecret{
@@ -174,7 +176,8 @@ func TestSourceConnect_RoundTrip(t *testing.T) {
 	roundTrip(t, "SourceConnectionResponse", SourceConnectionResponse{
 		ID: 1, Provider: SourceProviderGitHub, InstallationID: 12345,
 		AccountLogin: "acme", AccountType: "Organization",
-		Status: SourceConnectionStatusActive, CreatedAt: now, UpdatedAt: now,
+		ManageURL: "https://github.com/organizations/acme/settings/installations/12345",
+		Status:    SourceConnectionStatusActive, CreatedAt: now, UpdatedAt: now,
 	})
 	roundTrip(t, "SourceRepoResponse", SourceRepoResponse{
 		ID: 99, FullName: "acme/web", Private: true, DefaultBranch: "main",
@@ -188,12 +191,12 @@ func TestBuild_RoundTrip(t *testing.T) {
 	roundTrip(t, "BuildResponse", BuildResponse{
 		ID: 1, AppID: 7, CommitSHA: "abc123", Ref: "refs/heads/main",
 		Status: BuildStatusSucceeded, ImageDigest: "sha256:deadbeef",
-		LogURL: "https://logs.kumo.run/builds/1.txt?sig=x",
+		LogURL:    "https://logs.kumo.run/builds/1.txt?sig=x",
 		CreatedAt: now, StartedAt: &started, FinishedAt: &finished,
 	})
 	roundTrip(t, "CreateGitBuildAppRequest", CreateGitBuildAppRequest{
 		Name: "my-app", Port: 8080, IsExposed: true, Replicas: 2,
-		RepoFullName: "acme/web", Branch: "main",
+		RepoFullName: "acme/web", Branch: "main", Language: "nodejs",
 		EnvironmentVariables: []EnvironmentVariable{{Key: "FOO", Value: "bar"}},
 		PricingSlug:          "kumo.nano",
 		HealthCheck:          &HealthCheck{Type: "http", Path: "/health", Port: 8080},

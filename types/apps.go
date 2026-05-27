@@ -173,6 +173,11 @@ type AppByIdResponse struct {
 	// Image field is system-owned and cannot be changed via PATCH.
 	Source AppSource `json:"source"`
 
+	// Language is the build language preset for git-build apps ("auto" or a
+	// specific language: nodejs/python/go/java/ruby/php/dotnet). Empty/omitted
+	// for registry-image apps.
+	Language string `json:"language,omitempty"`
+
 	// Suspension state
 	IsSuspended   bool   `json:"is_suspended"`
 	SuspendReason string `json:"suspend_reason,omitempty"`

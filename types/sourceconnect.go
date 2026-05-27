@@ -25,15 +25,20 @@ const (
 // returned by GET /api/v1/source-connections.
 //
 // InstallationID is the provider-side installation identifier. It is NOT a
-// secret (it grants nothing without the platform's App private key) and is
-// exposed so the frontend can deep-link to the provider's "configure access"
-// page for adding/removing repositories.
+// secret (it grants nothing without the platform's App private key).
+//
+// ManageURL is the server-computed deep-link to the provider's "configure
+// access" page, where the user adds/removes repositories or switches to "all
+// repositories". Changing the grant there needs no reconnect — the platform
+// reads the repo list live. Omitted when it can't be built (e.g. a future
+// non-GitHub provider).
 type SourceConnectionResponse struct {
 	ID             uint                   `json:"id"`
 	Provider       SourceProvider         `json:"provider"`
 	InstallationID int64                  `json:"installation_id"`
 	AccountLogin   string                 `json:"account_login"`
 	AccountType    string                 `json:"account_type"` // "User" | "Organization"
+	ManageURL      string                 `json:"manage_url,omitempty"`
 	Status         SourceConnectionStatus `json:"status"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`

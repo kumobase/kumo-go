@@ -75,6 +75,11 @@ type CreateGitBuildAppRequest struct {
 	RepoFullName string `json:"repo_full_name"` // "owner/repo"
 	Branch       string `json:"branch"`
 
+	// Language is the build language preset. Empty or "auto" (default) lets the
+	// platform auto-detect the language; a specific value (e.g. "nodejs",
+	// "python", "go") pins the build to that language's buildpack.
+	Language string `json:"language,omitempty"`
+
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 	PricingSlug          string                `json:"pricing_slug"`
 	TLSSecretId          *uint                 `json:"tls_secret_id,omitempty"`
