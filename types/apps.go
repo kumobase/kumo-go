@@ -174,9 +174,15 @@ type AppByIdResponse struct {
 	Source AppSource `json:"source"`
 
 	// Language is the build language preset for git-build apps ("auto" or a
-	// specific language: nodejs/python/go/java/ruby/php/dotnet). Empty/omitted
-	// for registry-image apps.
+	// specific language: nodejs/python/go/java/ruby/php/dotnet, or "static").
+	// Empty/omitted for registry-image apps.
 	Language string `json:"language,omitempty"`
+
+	// OutputDir and BuildCommand are the static-site preset config for git-build
+	// apps (Language == "static"): the directory nginx serves and the npm build
+	// script run before serving. Empty/omitted for non-static and registry-image apps.
+	OutputDir    string `json:"output_dir,omitempty"`
+	BuildCommand string `json:"build_command,omitempty"`
 
 	// Suspension state
 	IsSuspended   bool   `json:"is_suspended"`
