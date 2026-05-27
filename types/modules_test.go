@@ -196,7 +196,8 @@ func TestBuild_RoundTrip(t *testing.T) {
 	})
 	roundTrip(t, "CreateGitBuildAppRequest", CreateGitBuildAppRequest{
 		Name: "my-app", Port: 8080, IsExposed: true, Replicas: 2,
-		RepoFullName: "acme/web", Branch: "main", Language: "nodejs",
+		RepoFullName: "acme/web", Branch: "main", Language: "static",
+		OutputDir: "dist", BuildCommand: "build",
 		EnvironmentVariables: []EnvironmentVariable{{Key: "FOO", Value: "bar"}},
 		PricingSlug:          "kumo.nano",
 		HealthCheck:          &HealthCheck{Type: "http", Path: "/health", Port: 8080},

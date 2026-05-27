@@ -77,8 +77,19 @@ type CreateGitBuildAppRequest struct {
 
 	// Language is the build language preset. Empty or "auto" (default) lets the
 	// platform auto-detect the language; a specific value (e.g. "nodejs",
-	// "python", "go") pins the build to that language's buildpack.
+	// "python", "go") pins the build to that language's buildpack. The special
+	// value "static" builds a static site served by nginx (see OutputDir /
+	// BuildCommand below).
 	Language string `json:"language,omitempty"`
+
+	// OutputDir and BuildCommand apply only to the "static" preset and are
+	// otherwise ignored. OutputDir is the directory nginx serves (default ".",
+	// the repo root for plain HTML; e.g. "dist"/"build" for a framework that
+	// compiles to static output). BuildCommand is the npm script name run before
+	// serving (e.g. "build") for framework→static; leave empty for pure static.
+	// A static app is always served on port 8080 (the port field is forced).
+	OutputDir    string `json:"output_dir,omitempty"`
+	BuildCommand string `json:"build_command,omitempty"`
 
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 	PricingSlug          string                `json:"pricing_slug"`
