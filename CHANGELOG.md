@@ -6,6 +6,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.7.0]
+
+### Added
+- `types/apps.go` — neutral instance/autoscaling fields on `AppByIdResponse`:
+  `TotalInstances`, `PendingInstances`, `RunningInstances`, `FailedInstances`,
+  `HasFailure`, and `AutoscalingStatus` (plus a new `AutoscalingStatus` type).
+  The server populates both these and the old pod-named fields during the
+  deprecation window so existing callers keep working.
+- `types/apps.go` — `GitBuildInfo` (`repo_full_name`, `branch`) and
+  `BuildSummary` (latest build snapshot). Embedded on `AppByIdResponse` as
+  `GitBuild` and `LatestBuild`; both nil for `registry-image` apps. Lets
+  callers render a git-build app's source + last-build state from one
+  `GET /apps/:id` instead of also calling `/apps/:id/builds`.
+
+### Deprecated
+- `AppByIdResponse.TotalPods` / `PendingPods` / `RunningPods` / `FailedPods` —
+  use the matching `*Instances` fields.
+- `AppByIdResponse.HasReplicaFailure` — use `HasFailure`.
+- `AppByIdResponse.HPAStatus` — use `AutoscalingStatus`. The `HPAStatusInfo`
+  type is now an alias for `AutoscalingStatus` so existing code compiles.
+
+Deprecated fields are still populated by the server and round-trip identically
+to today's response; they will be removed in a future minor.
+
+### Changed
+- `version.SDKVersion` bumped to `v0.7.0`.
+- Comments on `AppByIdResponse.InternalDNS` and the autoscaling/runtime fields
+  no longer name internal infrastructure terms.
+
 ## [v0.4.1]
 
 ### Added

@@ -61,6 +61,16 @@ func TestApps_RoundTrip(t *testing.T) {
 		AppStatus:          "running",
 		StatusMessage:      "all good",
 		DesiredReplicas:    1, ReadyReplicas: 1,
+		TotalInstances: 1, RunningInstances: 1,
+		TotalPods: 1, RunningPods: 1,
+		HasFailure: false, HasReplicaFailure: false,
+		AutoscalingStatus: &AutoscalingStatus{CurrentReplicas: 1, DesiredReplicas: 1, MinReplicas: 1, MaxReplicas: 3},
+		HPAStatus:         &AutoscalingStatus{CurrentReplicas: 1, DesiredReplicas: 1, MinReplicas: 1, MaxReplicas: 3},
+		GitBuild:          &GitBuildInfo{RepoFullName: "acme/web", Branch: "main"},
+		LatestBuild: &BuildSummary{
+			ID: 9, CommitSHA: "abc123", Ref: "refs/heads/main",
+			Status: BuildStatusSucceeded, CreatedAt: now,
+		},
 		CreatedAt: now, UpdatedAt: now,
 	})
 	roundTrip(t, "AddCustomDomainRequest", AddCustomDomainRequest{Domain: "shop.example.com"})

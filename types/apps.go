@@ -168,9 +168,10 @@ type VolumeInfo struct {
 	Status    string `json:"status"`
 }
 
-// HPAStatusInfo is the runtime HorizontalPodAutoscaler snapshot included
-// when an app has autoscaling enabled.
-type HPAStatusInfo struct {
+// AutoscalingStatus is the runtime autoscaler snapshot included when an app
+// has autoscaling enabled. Fields cover the current/desired instance counts
+// and the most recent utilisation observation that drives scaling decisions.
+type AutoscalingStatus struct {
 	CurrentReplicas int32   `json:"current_replicas"`
 	DesiredReplicas int32   `json:"desired_replicas"`
 	MinReplicas     int32   `json:"min_replicas"`
@@ -178,6 +179,38 @@ type HPAStatusInfo struct {
 	CurrentCPUUsage *int32  `json:"current_cpu_usage,omitempty"`
 	CurrentMemUsage *int32  `json:"current_mem_usage,omitempty"`
 	LastScaleTime   *string `json:"last_scale_time,omitempty"`
+}
+
+// HPAStatusInfo is the previous name for AutoscalingStatus.
+//
+// Deprecated: use AutoscalingStatus. The alias is kept so existing callers
+// compile unchanged; it will be removed in a future minor.
+type HPAStatusInfo = AutoscalingStatus
+
+// GitBuildInfo identifies the source repository a git-build app builds from.
+// Returned on AppByIdResponse only when Source == AppSourceGitBuild.
+type GitBuildInfo struct {
+	RepoFullName string `json:"repo_full_name"` // "owner/repo"
+	Branch       string `json:"branch"`
+}
+
+// BuildSummary is the embedded snapshot of a git-build app's most recent
+// build, intended for app-detail responses. Strictly lighter than
+// BuildResponse: it omits the presigned LogURL (which would expire shortly
+// after the response is cached) and ImageDigest (which is the canonical
+// per-build artefact, available via GET /apps/:id/builds/:buildID).
+//
+// For the full build history fetch GET /api/v1/apps/:id/builds; for a
+// single build's log URL fetch GET /api/v1/apps/:id/builds/:buildID.
+type BuildSummary struct {
+	ID         uint        `json:"id"`
+	CommitSHA  string      `json:"commit_sha"`
+	Ref        string      `json:"ref"` // e.g. "refs/heads/main"
+	Status     BuildStatus `json:"status"`
+	Error      string      `json:"error,omitempty"`
+	CreatedAt  time.Time   `json:"created_at"`
+	StartedAt  *time.Time  `json:"started_at,omitempty"`
+	FinishedAt *time.Time  `json:"finished_at,omitempty"`
 }
 
 // AppByIdResponse is the full app detail returned by GET /api/v1/apps/:id.
@@ -216,17 +249,55 @@ type AppByIdResponse struct {
 	AvailableReplicas   int    `json:"available_replicas"`
 	UpdatedReplicas     int    `json:"updated_replicas"`
 	UnavailableReplicas int    `json:"unavailable_replicas"`
-	TotalPods           int    `json:"total_pods"`
-	PendingPods         int    `json:"pending_pods"`
-	RunningPods         int    `json:"running_pods"`
-	FailedPods          int    `json:"failed_pods"`
-	IsDeploying         bool   `json:"is_deploying"`
-	HasReplicaFailure   bool   `json:"has_replica_failure"`
+
+	// Instance counts roll up the lifecycle of each running container
+	// instance for the app: pending = not yet ready, running = serving,
+	// failed = terminated unhealthily. Total = pending + running + failed
+	// (+ any transient states).
+	TotalInstances   int `json:"total_instances"`
+	PendingInstances int `json:"pending_instances"`
+	RunningInstances int `json:"running_instances"`
+	FailedInstances  int `json:"failed_instances"`
+
+	// Deprecated: use TotalInstances. Will be removed in a future minor.
+	TotalPods int `json:"total_pods"`
+	// Deprecated: use PendingInstances. Will be removed in a future minor.
+	PendingPods int `json:"pending_pods"`
+	// Deprecated: use RunningInstances. Will be removed in a future minor.
+	RunningPods int `json:"running_pods"`
+	// Deprecated: use FailedInstances. Will be removed in a future minor.
+	FailedPods int `json:"failed_pods"`
+
+	IsDeploying bool `json:"is_deploying"`
+
+	// HasFailure is true when the platform cannot bring the desired number
+	// of instances online (e.g. image-pull failure, resource exhaustion).
+	HasFailure bool `json:"has_failure"`
+	// Deprecated: use HasFailure. Will be removed in a future minor.
+	HasReplicaFailure bool `json:"has_replica_failure"`
 
 	CustomDomain *CustomDomainInfo `json:"custom_domain,omitempty"`
-	InternalDNS  string            `json:"internal_dns"`
-	HPAStatus    *HPAStatusInfo    `json:"hpa_status,omitempty"`
-	Volume       *VolumeInfo       `json:"volume,omitempty"`
+
+	// InternalDNS is the stable in-cluster DNS name other Kumo apps in the
+	// same account can use to reach this app (e.g. "my-app-xyz.<ns>").
+	InternalDNS string `json:"internal_dns"`
+
+	// AutoscalingStatus is the live snapshot of the autoscaler when the app
+	// has autoscaling enabled; nil otherwise.
+	AutoscalingStatus *AutoscalingStatus `json:"autoscaling_status,omitempty"`
+	// Deprecated: use AutoscalingStatus. Will be removed in a future minor.
+	HPAStatus *AutoscalingStatus `json:"hpa_status,omitempty"`
+
+	Volume *VolumeInfo `json:"volume,omitempty"`
+
+	// GitBuild is the source-repo identity for a git-build app (RepoFullName
+	// + Branch). Populated only when Source == AppSourceGitBuild.
+	GitBuild *GitBuildInfo `json:"git_build,omitempty"`
+
+	// LatestBuild is a snapshot of the most recent build for a git-build
+	// app. Nil for registry-image apps, and also nil for a git-build app
+	// that has not yet produced its first build row.
+	LatestBuild *BuildSummary `json:"latest_build,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
