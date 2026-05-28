@@ -11,6 +11,7 @@ const (
 	OrgNotMember            = "ORG_NOT_MEMBER"
 	OrgMaxOrganizationsReached = "ORG_MAX_REACHED"
 	OrgHasRepos             = "ORG_HAS_REPOS"
+	OrgCannotDeleteDefault  = "ORG_CANNOT_DELETE_DEFAULT"
 
 	OrgInvalidRequestBody = "INVALID_REQUEST_BODY"
 	OrgValidationError    = "VALIDATION_ERROR"

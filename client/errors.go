@@ -143,7 +143,7 @@ func IsConflict(err error) bool {
 		codes.SecretInUse,
 		codes.VolumeAttached, codes.VolumePermanentlyAttached, codes.VolumeResizing,
 		codes.ActionInProgress, codes.AutoRenewAlreadyCancelled,
-		codes.OrgSlugTaken, codes.OrgMaxOrganizationsReached, codes.OrgHasRepos,
+		codes.OrgSlugTaken, codes.OrgMaxOrganizationsReached, codes.OrgHasRepos, codes.OrgCannotDeleteDefault,
 		codes.RegistryRepositoryAlreadyExists, codes.RegistryTagImmutable, codes.RegistryMaxRepositoriesReached:
 		return true
 	}
