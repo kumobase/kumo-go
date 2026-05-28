@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/kumobase/kumo-go/types"
 )
@@ -28,6 +29,28 @@ func (s *APIKeysService) List(ctx context.Context) ([]types.APIKeyResponse, erro
 	var out []types.APIKeyResponse
 	_, err := s.c.doList(ctx, "GET", "/api/v1/api-keys", &out)
 	return out, err
+}
+
+// Get fetches a single API key's metadata by id. The raw key value is never
+// returned (only at Create); response is the same shape as a List entry.
+func (s *APIKeysService) Get(ctx context.Context, id uint) (*types.APIKeyResponse, error) {
+	var out types.APIKeyResponse
+	_, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/api-keys/%d", id), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetByName fetches an API key by its (per-user unique) name, hitting the
+// same endpoint as Get with a name segment.
+func (s *APIKeysService) GetByName(ctx context.Context, name string) (*types.APIKeyResponse, error) {
+	var out types.APIKeyResponse
+	_, _, err := s.c.do(ctx, "GET", "/api/v1/api-keys/"+url.PathEscape(name), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 // Create issues a new API key. The full key value (kumo_sk_…) is

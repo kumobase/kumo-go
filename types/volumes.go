@@ -24,11 +24,14 @@ const (
 // automatically scaled to 1 replica and has autoscaling disabled as part of
 // the create. Without it, an app that doesn't already satisfy those
 // constraints is rejected (data-loss-safe default).
+// Identify the target app (when attaching at create) by exactly one of AppID
+// or AppName — the server returns 400 VALIDATION_FAILED if both are set.
 type CreateVolumeRequest struct {
-	AppID            *uint  `json:"app_id"`
-	Name             string `json:"name"`              // 1..100 chars
-	StorageTier      string `json:"storage_tier"`      // slug — see StorageTierResponse.Slug
-	SizeGB           int    `json:"size_gb"`           // >= 1
+	AppID            *uint  `json:"app_id,omitempty"`
+	AppName          string `json:"app_name,omitempty"`
+	Name             string `json:"name"`         // 1..100 chars
+	StorageTier      string `json:"storage_tier"` // slug — see StorageTierResponse.Slug
+	SizeGB           int    `json:"size_gb"`      // >= 1
 	MountPath        string `json:"mount_path,omitempty"`
 	ForceReconfigure bool   `json:"force_reconfigure"`
 }
@@ -42,8 +45,11 @@ type ResizeVolumeRequest struct {
 
 // AttachVolumeRequest is the body for POST /api/v1/volumes/:id/attach.
 // ForceReconfigure has the same semantics as on CreateVolumeRequest.
+//
+// Same exactly-one-of contract: set AppID or AppName, never both.
 type AttachVolumeRequest struct {
-	AppID            uint   `json:"app_id"`
+	AppID            uint   `json:"app_id,omitempty"`
+	AppName          string `json:"app_name,omitempty"`
 	MountPath        string `json:"mount_path,omitempty"`
 	ForceReconfigure bool   `json:"force_reconfigure"`
 }

@@ -30,6 +30,20 @@ func TestApps_RoundTrip(t *testing.T) {
 	roundTrip(t, "SecretFileMount/byName", SecretFileMount{
 		Type: SecretFileMountTypeSecretFile, MountTo: "/etc/tls/cert.pem", SecretName: "tls-cert",
 	})
+
+	// Cross-resource attach-by-name on Create/Update (TLS + registry credential).
+	roundTrip(t, "CreateAppRequest/by-secret-names", CreateAppRequest{
+		BaseCreateApp:          BaseCreateApp{Name: "x", Image: "nginx", Port: 80, Replicas: 1},
+		PricingSlug:            "kumo.nano",
+		TLSSecretName:          "tls-cert",
+		RegistryCredentialName: "my-registry",
+	})
+	roundTrip(t, "UpdateAppRequest/by-secret-names", UpdateAppRequest{
+		BaseCreateApp:          BaseCreateApp{Name: "x", Image: "nginx", Port: 80, Replicas: 1},
+		PricingSlug:            "kumo.nano",
+		TLSSecretName:          "tls-cert",
+		RegistryCredentialName: "my-registry",
+	})
 	roundTrip(t, "CreateAppResponse", CreateAppResponse{
 		ID: 7, Name: "my-app", GenerateAppName: "my-app-x4z",
 		DeploymentStatus: string(AppDeploymentStatusDeploying),
@@ -84,6 +98,13 @@ func TestVolumes_RoundTrip(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	roundTrip(t, "CreateVolumeRequest", CreateVolumeRequest{
 		Name: "data", StorageTier: "ssd-std", SizeGB: 10, MountPath: "/data",
+	})
+	// Cross-resource attach-by-name on volume create + attach.
+	roundTrip(t, "CreateVolumeRequest/byAppName", CreateVolumeRequest{
+		Name: "data", StorageTier: "ssd-std", SizeGB: 10, AppName: "my-api",
+	})
+	roundTrip(t, "AttachVolumeRequest/byAppName", AttachVolumeRequest{
+		AppName: "my-api", MountPath: "/data",
 	})
 	roundTrip(t, "VolumeResponse", VolumeResponse{
 		ID: 1, Name: "data", SizeGB: 10, MountPath: "/data",

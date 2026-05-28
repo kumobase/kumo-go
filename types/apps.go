@@ -95,31 +95,42 @@ type BaseCreateApp struct {
 }
 
 // CreateAppRequest is the body for POST /api/v1/apps. Supports Idempotency-Key.
+//
+// RegistryCredentialId / RegistryCredentialName and TLSSecretId / TLSSecretName
+// follow the same exactly-one-of contract as SecretVar: set at most one of each
+// pair. The server returns 400 VALIDATION_FAILED if both are set.
 type CreateAppRequest struct {
 	BaseCreateApp
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 
 	PricingSlug string `json:"pricing_slug"`
 
-	RegistryCredentialId uint              `json:"registry_credential_id,omitempty"`
-	TLSSecretId          *uint             `json:"tls_secret_id,omitempty"`
-	SecretVars           []SecretVar       `json:"secret_vars,omitempty"`
-	SecretFileMounts     []SecretFileMount `json:"secret_file_mounts,omitempty"`
-	HealthCheck          *HealthCheck      `json:"healthcheck,omitempty"`
+	RegistryCredentialId   uint              `json:"registry_credential_id,omitempty"`
+	RegistryCredentialName string            `json:"registry_credential_name,omitempty"`
+	TLSSecretId            *uint             `json:"tls_secret_id,omitempty"`
+	TLSSecretName          string            `json:"tls_secret_name,omitempty"`
+	SecretVars             []SecretVar       `json:"secret_vars,omitempty"`
+	SecretFileMounts       []SecretFileMount `json:"secret_file_mounts,omitempty"`
+	HealthCheck            *HealthCheck      `json:"healthcheck,omitempty"`
 }
 
 // UpdateAppRequest is the body for PATCH /api/v1/apps/:id. Same shape as
 // create, kept as a distinct type so future fields can diverge.
+//
+// Same exactly-one-of contract as CreateAppRequest for the credential / TLS
+// secret pairs.
 type UpdateAppRequest struct {
 	BaseCreateApp
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 
-	PricingSlug          string            `json:"pricing_slug"`
-	RegistryCredentialId uint              `json:"registry_credential_id,omitempty"`
-	TLSSecretId          *uint             `json:"tls_secret_id,omitempty"`
-	SecretVars           []SecretVar       `json:"secret_vars,omitempty"`
-	SecretFileMounts     []SecretFileMount `json:"secret_file_mounts,omitempty"`
-	HealthCheck          *HealthCheck      `json:"healthcheck,omitempty"`
+	PricingSlug            string            `json:"pricing_slug"`
+	RegistryCredentialId   uint              `json:"registry_credential_id,omitempty"`
+	RegistryCredentialName string            `json:"registry_credential_name,omitempty"`
+	TLSSecretId            *uint             `json:"tls_secret_id,omitempty"`
+	TLSSecretName          string            `json:"tls_secret_name,omitempty"`
+	SecretVars             []SecretVar       `json:"secret_vars,omitempty"`
+	SecretFileMounts       []SecretFileMount `json:"secret_file_mounts,omitempty"`
+	HealthCheck            *HealthCheck      `json:"healthcheck,omitempty"`
 }
 
 // CreateAppResponse is the 202 Accepted payload returned by POST /api/v1/apps.

@@ -148,6 +148,39 @@ func TestNameAddressing_GetByName(t *testing.T) {
 	}
 }
 
+// VPS GetServerByName + API keys Get/GetByName — same id-or-name mechanism,
+// added in v0.6.0 alongside cross-resource attach-by-name DTOs.
+func TestNameAddressing_VPSAndAPIKeys(t *testing.T) {
+	var seen string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = r.URL.Path
+		switch r.URL.Path {
+		case "/api/v1/vps/servers/edge-1":
+			writeStruct(w, 200, "", "ok", &types.VPSServerResponse{ID: 11, DisplayName: "edge-1", Status: "running"})
+		case "/api/v1/api-keys/ci-deployer":
+			writeStruct(w, 200, "", "ok", &types.APIKeyResponse{ID: 12, Name: "ci-deployer"})
+		case "/api/v1/api-keys/13":
+			writeStruct(w, 200, "", "ok", &types.APIKeyResponse{ID: 13, Name: "byid"})
+		default:
+			writeStruct(w, 404, codes.AppNotFound, "not found", nil)
+		}
+	})
+	ctx := context.Background()
+
+	if srv, err := c.VPS().GetServerByName(ctx, "edge-1"); err != nil || srv.ID != 11 {
+		t.Fatalf("VPS.GetServerByName: %v (%+v)", err, srv)
+	}
+	if k, err := c.APIKeys().GetByName(ctx, "ci-deployer"); err != nil || k.ID != 12 {
+		t.Fatalf("APIKeys.GetByName: %v (%+v)", err, k)
+	}
+	if k, err := c.APIKeys().Get(ctx, 13); err != nil || k.ID != 13 {
+		t.Fatalf("APIKeys.Get: %v (%+v)", err, k)
+	}
+	if seen != "/api/v1/api-keys/13" {
+		t.Errorf("last path = %q", seen)
+	}
+}
+
 // ── VPS ──────────────────────────────────────────────────────────────
 
 func TestVPS_Smoke(t *testing.T) {

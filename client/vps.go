@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/kumobase/kumo-go/types"
 )
@@ -63,6 +64,19 @@ func (s *VPSService) ListServers(ctx context.Context, opts ...ListOption) ([]typ
 func (s *VPSService) GetServer(ctx context.Context, id uint) (*types.VPSServerResponse, error) {
 	var out types.VPSServerResponse
 	_, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/vps/servers/%d", id), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetServerByName fetches a single VPS instance by its display_name. The
+// server resolves a non-numeric path segment as a name; servers without a
+// user-supplied display_name remain reachable only by id. Returns 404 if
+// no server in the caller's scope matches the name.
+func (s *VPSService) GetServerByName(ctx context.Context, name string) (*types.VPSServerResponse, error) {
+	var out types.VPSServerResponse
+	_, _, err := s.c.do(ctx, "GET", "/api/v1/vps/servers/"+url.PathEscape(name), nil, nil, &out)
 	if err != nil {
 		return nil, err
 	}

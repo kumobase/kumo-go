@@ -47,4 +47,11 @@ const (
 	// contain only letters, digits, and hyphens (an RFC-1035 label, max 63
 	// chars). The all-numeric exclusion keeps names unambiguous against ids.
 	InvalidResourceName = "INVALID_RESOURCE_NAME"
+
+	// NameTaken — a create or rename was rejected by the per-user UNIQUE(name)
+	// constraint: the name is already in use by another (non-soft-deleted)
+	// resource of the same kind in the caller's scope. Distinct from
+	// AMBIGUOUS_NAME (which is a *lookup* surfacing the absence of the
+	// constraint) — NAME_TAKEN is the *write* failure.
+	NameTaken = "NAME_TAKEN"
 )
