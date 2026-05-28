@@ -39,4 +39,18 @@ const (
 
 	// BuildInternalError — unexpected server-side failure.
 	BuildInternalError = "BUILD_INTERNAL_ERROR"
+
+	// BuildTriggerRequired — Create or Update would leave the app with no
+	// build trigger at all (both Branch and TagPattern empty). At least one
+	// must be set.
+	BuildTriggerRequired = "BUILD_TRIGGER_REQUIRED"
+
+	// BuildInvalidTagPattern — supplied TagPattern is not a valid glob
+	// (path.Match syntax). Common causes: unbalanced bracket like "v[".
+	BuildInvalidTagPattern = "BUILD_INVALID_TAG_PATTERN"
+
+	// BuildNeedsBranch — manual rebuild (POST /api/v1/apps/:id/builds) was
+	// attempted on a tag-only app (Branch empty). Move/re-push a matching
+	// tag instead, or PATCH the build-config to add a branch trigger.
+	BuildNeedsBranch = "BUILD_NEEDS_BRANCH"
 )

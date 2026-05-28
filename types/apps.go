@@ -204,11 +204,18 @@ type AutoscalingStatus struct {
 // compile unchanged; it will be removed in a future minor.
 type HPAStatusInfo = AutoscalingStatus
 
-// GitBuildInfo identifies the source repository a git-build app builds from.
-// Returned on AppByIdResponse only when Source == AppSourceGitBuild.
+// GitBuildInfo identifies the source repository a git-build app builds from
+// and which refs trigger new builds. Returned on AppByIdResponse only when
+// Source == AppSourceGitBuild.
+//
+// Trigger semantics: Branch is exact-match against the pushed branch name
+// (empty disables branch triggers). TagPattern is a glob (path.Match
+// syntax: *, ?, [abc]) matched against the bare tag name without the
+// refs/tags/ prefix (empty disables tag triggers). At least one is set.
 type GitBuildInfo struct {
 	RepoFullName string `json:"repo_full_name"` // "owner/repo"
 	Branch       string `json:"branch"`
+	TagPattern   string `json:"tag_pattern,omitempty"` // glob, e.g. "v*", "release/*"
 }
 
 // BuildSummary is the embedded snapshot of a git-build app's most recent

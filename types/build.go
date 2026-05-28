@@ -62,9 +62,20 @@ type BuildResponse struct {
 // image is produced by the platform and pushed to an auto-provisioned, system-
 // owned registry repository, so neither is user-supplied.
 //
-// RepoFullName ("owner/repo") must be a repository the connection can access;
-// Branch is the branch whose pushes trigger a build (HEAD is also built once
-// on create so the app deploys without a dummy push). Supports Idempotency-Key.
+// RepoFullName ("owner/repo") must be a repository the connection can access.
+// At least one of Branch or TagPattern must be set:
+//   - Branch: exact-match branch name; pushes trigger a build. HEAD is also
+//     built once on create so the app deploys without a dummy push.
+//   - TagPattern: glob pattern (path.Match syntax: *, ?, [abc]) matched
+//     against the bare tag name (no refs/tags/ prefix). Tag pushes whose
+//     name matches trigger a build. No build runs on create for tag-only
+//     apps — push or move a matching tag to deploy.
+//
+// Both may be set on the same app (build on main pushes AND on vX.Y.Z tags).
+// Server returns 400 BUILD_TRIGGER_REQUIRED if both are empty, and 400
+// BUILD_INVALID_TAG_PATTERN if TagPattern fails glob validation.
+//
+// Supports Idempotency-Key.
 type CreateGitBuildAppRequest struct {
 	Name        string             `json:"name"`
 	Port        uint16             `json:"port"`
@@ -73,7 +84,8 @@ type CreateGitBuildAppRequest struct {
 	Autoscaling *AutoscalingConfig `json:"autoscaling,omitempty"`
 
 	RepoFullName string `json:"repo_full_name"` // "owner/repo"
-	Branch       string `json:"branch"`
+	Branch       string `json:"branch,omitempty"`
+	TagPattern   string `json:"tag_pattern,omitempty"` // glob, e.g. "v*", "release/*"
 
 	// Language is the build language preset. Empty or "auto" (default) lets the
 	// platform auto-detect the language; a specific value (e.g. "nodejs",
@@ -100,13 +112,20 @@ type CreateGitBuildAppRequest struct {
 }
 
 // UpdateBuildConfigRequest is the body for PATCH /api/v1/apps/:id/build-config.
-// It replaces the build preset of an existing git-build app — the three fields
-// are set wholesale (an empty OutputDir/BuildCommand clears them), so send the
-// full intended state, not a partial diff. Changes apply on the NEXT build
-// (this does not trigger one). Switching Language to "static" forces the app's
-// port to 8080 (nginx). Supports optional If-Match for optimistic concurrency.
+// It updates the build preset + trigger config of an existing git-build app.
+//
+// PATCH semantics for TagPattern: nil pointer / absent key = no change;
+// non-nil empty string = clear the tag trigger. The Language / OutputDir /
+// BuildCommand strings stay wholesale-set (empty clears) for back-compat
+// with the v0.7.x shape; pass the full intended value.
+//
+// Changes apply on the NEXT build (this does not trigger one). Switching
+// Language to "static" forces the app's port to 8080 (nginx). Clearing both
+// the branch and tag triggers returns 400 BUILD_TRIGGER_REQUIRED. Supports
+// optional If-Match for optimistic concurrency.
 type UpdateBuildConfigRequest struct {
-	Language     string `json:"language,omitempty"`      // "auto" (default) | a language | "static"
-	OutputDir    string `json:"output_dir,omitempty"`    // static only → BP_WEB_SERVER_ROOT
-	BuildCommand string `json:"build_command,omitempty"` // static only → BP_NODE_RUN_SCRIPTS (npm script)
+	Language     string  `json:"language,omitempty"`      // "auto" (default) | a language | "static"
+	OutputDir    string  `json:"output_dir,omitempty"`    // static only → BP_WEB_SERVER_ROOT
+	BuildCommand string  `json:"build_command,omitempty"` // static only → BP_NODE_RUN_SCRIPTS (npm script)
+	TagPattern   *string `json:"tag_pattern,omitempty"`   // glob; nil = no change, "" = clear
 }
