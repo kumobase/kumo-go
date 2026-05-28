@@ -39,10 +39,13 @@ func TestApps_RoundTrip(t *testing.T) {
 		RegistryCredentialName: "my-registry",
 	})
 	roundTrip(t, "UpdateAppRequest/by-secret-names", UpdateAppRequest{
-		BaseCreateApp:          BaseCreateApp{Name: "x", Image: "nginx", Port: 80, Replicas: 1},
-		PricingSlug:            "kumo.nano",
-		TLSSecretName:          "tls-cert",
-		RegistryCredentialName: "my-registry",
+		Name:                   strPtr("x"),
+		Image:                  strPtr("nginx"),
+		Port:                   u16Ptr(80),
+		Replicas:               intPtr(1),
+		PricingSlug:            strPtr("kumo.nano"),
+		TLSSecretName:          strPtr("tls-cert"),
+		RegistryCredentialName: strPtr("my-registry"),
 	})
 	roundTrip(t, "CreateAppResponse", CreateAppResponse{
 		ID: 7, Name: "my-app", GenerateAppName: "my-app-x4z",
@@ -248,4 +251,6 @@ func TestBuild_RoundTrip(t *testing.T) {
 	})
 }
 
-func intPtr(v int) *int { return &v }
+func intPtr(v int) *int       { return &v }
+func strPtr(v string) *string { return &v }
+func u16Ptr(v uint16) *uint16 { return &v }

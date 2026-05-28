@@ -114,20 +114,37 @@ type CreateAppRequest struct {
 	HealthCheck            *HealthCheck      `json:"healthcheck,omitempty"`
 }
 
-// UpdateAppRequest is the body for PATCH /api/v1/apps/:id. Same shape as
-// create, kept as a distinct type so future fields can diverge.
+// UpdateAppRequest is the body for PATCH /api/v1/apps/:id. PATCH-semantics:
+// every field is optional, and only the fields the client supplies are
+// applied to the app. A nil pointer / absent JSON key means "no change". A
+// non-nil empty slice (e.g. environment_variables: []) means "clear it".
+//
+// Source-conditional fields:
+//   - Image: for git-build apps, the platform owns the image; sending a
+//     value that differs from the current one returns 409
+//     BUILD_APP_IMAGE_IMMUTABLE. Sending nil, "", or the current value is a
+//     no-op. For registry-image apps, nil/"" keeps the existing image;
+//     anything else is validated and applied.
+//   - RegistryCredentialId / RegistryCredentialName: silently ignored for
+//     git-build apps (they push to the platform registry).
 //
 // Same exactly-one-of contract as CreateAppRequest for the credential / TLS
-// secret pairs.
+// secret pairs when both are supplied.
 type UpdateAppRequest struct {
-	BaseCreateApp
+	Name        *string            `json:"name,omitempty"`
+	Image       *string            `json:"image,omitempty"`
+	Port        *uint16            `json:"port,omitempty"`
+	IsExposed   *bool              `json:"is_exposed,omitempty"`
+	Replicas    *int               `json:"replicas,omitempty"`
+	Autoscaling *AutoscalingConfig `json:"autoscaling,omitempty"`
+
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 
-	PricingSlug            string            `json:"pricing_slug"`
-	RegistryCredentialId   uint              `json:"registry_credential_id,omitempty"`
-	RegistryCredentialName string            `json:"registry_credential_name,omitempty"`
+	PricingSlug            *string           `json:"pricing_slug,omitempty"`
+	RegistryCredentialId   *uint             `json:"registry_credential_id,omitempty"`
+	RegistryCredentialName *string           `json:"registry_credential_name,omitempty"`
 	TLSSecretId            *uint             `json:"tls_secret_id,omitempty"`
-	TLSSecretName          string            `json:"tls_secret_name,omitempty"`
+	TLSSecretName          *string           `json:"tls_secret_name,omitempty"`
 	SecretVars             []SecretVar       `json:"secret_vars,omitempty"`
 	SecretFileMounts       []SecretFileMount `json:"secret_file_mounts,omitempty"`
 	HealthCheck            *HealthCheck      `json:"healthcheck,omitempty"`
