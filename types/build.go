@@ -114,18 +114,25 @@ type CreateGitBuildAppRequest struct {
 // UpdateBuildConfigRequest is the body for PATCH /api/v1/apps/:id/build-config.
 // It updates the build preset + trigger config of an existing git-build app.
 //
-// PATCH semantics for TagPattern: nil pointer / absent key = no change;
-// non-nil empty string = clear the tag trigger. The Language / OutputDir /
-// BuildCommand strings stay wholesale-set (empty clears) for back-compat
-// with the v0.7.x shape; pass the full intended value.
+// PATCH semantics for Branch and TagPattern: nil pointer / absent key = no
+// change; non-nil empty string = clear that trigger; non-nil non-empty = set
+// it. The Language / OutputDir / BuildCommand strings stay wholesale-set
+// (empty clears) for back-compat with the v0.7.x shape; pass the full
+// intended value.
 //
 // Changes apply on the NEXT build (this does not trigger one). Switching
 // Language to "static" forces the app's port to 8080 (nginx). Clearing both
-// the branch and tag triggers returns 400 BUILD_TRIGGER_REQUIRED. Supports
-// optional If-Match for optimistic concurrency.
+// the branch and tag triggers (evaluated against the resulting state) returns
+// 400 BUILD_TRIGGER_REQUIRED. Setting a branch on a previously tag-only app
+// re-enables manual rebuild. Supports optional If-Match for optimistic
+// concurrency.
 type UpdateBuildConfigRequest struct {
 	Language     string  `json:"language,omitempty"`      // "auto" (default) | a language | "static"
 	OutputDir    string  `json:"output_dir,omitempty"`    // static only → BP_WEB_SERVER_ROOT
 	BuildCommand string  `json:"build_command,omitempty"` // static only → BP_NODE_RUN_SCRIPTS (npm script)
-	TagPattern   *string `json:"tag_pattern,omitempty"`   // glob; nil = no change, "" = clear
+	// Branch is exact-match (not a glob). nil = no change, "" = clear the
+	// branch trigger, non-empty = set. Cross-field (at-least-one trigger)
+	// checked server-side.
+	Branch     *string `json:"branch,omitempty"`
+	TagPattern *string `json:"tag_pattern,omitempty"` // glob; nil = no change, "" = clear
 }

@@ -59,6 +59,35 @@ func TestUpdateBuildConfigRequest_TagPatternPointer(t *testing.T) {
 	}
 }
 
+// TestUpdateBuildConfigRequest_BranchPointer mirrors the TagPattern PATCH
+// pattern for the editable branch trigger: nil = no change, non-nil "" = clear,
+// non-nil non-empty = set.
+func TestUpdateBuildConfigRequest_BranchPointer(t *testing.T) {
+	b, _ := json.Marshal(UpdateBuildConfigRequest{Language: "auto"})
+	if strings.Contains(string(b), `"branch"`) {
+		t.Fatalf("nil Branch must be absent from JSON, got %s", b)
+	}
+
+	empty := ""
+	b, _ = json.Marshal(UpdateBuildConfigRequest{Branch: &empty})
+	if !strings.Contains(string(b), `"branch":""`) {
+		t.Fatalf("non-nil empty Branch must serialise as \"\", got %s", b)
+	}
+
+	v := "develop"
+	b, _ = json.Marshal(UpdateBuildConfigRequest{Branch: &v})
+	if !strings.Contains(string(b), `"branch":"develop"`) {
+		t.Fatalf("Branch value not preserved, got %s", b)
+	}
+	var back UpdateBuildConfigRequest
+	if err := json.Unmarshal(b, &back); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if back.Branch == nil || *back.Branch != "develop" {
+		t.Fatalf("round-trip lost Branch: %v", back.Branch)
+	}
+}
+
 // TestGitBuildInfo_TagPatternRoundTrip pins the read-side surface on the app
 // detail.
 func TestGitBuildInfo_TagPatternRoundTrip(t *testing.T) {
