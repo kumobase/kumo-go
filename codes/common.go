@@ -54,4 +54,9 @@ const (
 	// AMBIGUOUS_NAME (which is a *lookup* surfacing the absence of the
 	// constraint) — NAME_TAKEN is the *write* failure.
 	NameTaken = "NAME_TAKEN"
+
+	// Unauthorized — the request lacked a valid session/credential the endpoint
+	// requires (e.g. the JWT could not be parsed). Cross-cutting: any
+	// authenticated endpoint may return it.
+	Unauthorized = "UNAUTHORIZED"
 )
