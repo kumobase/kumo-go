@@ -49,8 +49,11 @@ type BuildResponse struct {
 	Ref         string      `json:"ref"` // e.g. "refs/heads/main"
 	Status      BuildStatus `json:"status"`
 	ImageDigest string      `json:"image_digest,omitempty"`
-	LogURL      string      `json:"log_url,omitempty"`
-	Error       string      `json:"error,omitempty"`
+	// LogURL is deprecated and no longer populated by the list or detail
+	// endpoints (it always presigned a short-lived URL the caller usually
+	// never used). Fetch a fresh URL on demand via Builds().GetLogURL.
+	LogURL string `json:"log_url,omitempty"`
+	Error  string `json:"error,omitempty"`
 	CreatedAt   time.Time   `json:"created_at"`
 	StartedAt   *time.Time  `json:"started_at,omitempty"`
 	FinishedAt  *time.Time  `json:"finished_at,omitempty"`
@@ -135,4 +138,13 @@ type UpdateBuildConfigRequest struct {
 	// checked server-side.
 	Branch     *string `json:"branch,omitempty"`
 	TagPattern *string `json:"tag_pattern,omitempty"` // glob; nil = no change, "" = clear
+}
+
+// BuildLogURLResponse is the body of GET /api/v1/apps/:id/builds/:buildId/log-url.
+// LogURL is a freshly-minted, short-lived presigned link to the build's
+// plain-text log. Fetch it only when you're about to open the log — it expires
+// quickly and is not cacheable. Returns 404 BUILD_LOG_NOT_AVAILABLE when the
+// build has no persisted log (still pending/running, or the upload failed).
+type BuildLogURLResponse struct {
+	LogURL string `json:"log_url"`
 }

@@ -116,4 +116,25 @@ func TestBuildCodes_NewSentinels(t *testing.T) {
 	if codes.BuildNeedsBranch != "BUILD_NEEDS_BRANCH" {
 		t.Fatalf("BuildNeedsBranch drifted: %q", codes.BuildNeedsBranch)
 	}
+	if codes.BuildLogNotAvailable != "BUILD_LOG_NOT_AVAILABLE" {
+		t.Fatalf("BuildLogNotAvailable drifted: %q", codes.BuildLogNotAvailable)
+	}
+}
+
+// TestBuildLogURLResponse_RoundTrip pins the dedicated log-url endpoint's body.
+func TestBuildLogURLResponse_RoundTrip(t *testing.T) {
+	b, err := json.Marshal(BuildLogURLResponse{LogURL: "https://logs/3.txt?sig=x"})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if !strings.Contains(string(b), `"log_url":"https://logs/3.txt?sig=x"`) {
+		t.Fatalf("log_url key missing or wrong: %s", b)
+	}
+	var back BuildLogURLResponse
+	if err := json.Unmarshal(b, &back); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if back.LogURL != "https://logs/3.txt?sig=x" {
+		t.Fatalf("round-trip lost log_url: %q", back.LogURL)
+	}
 }

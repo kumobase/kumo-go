@@ -53,4 +53,9 @@ const (
 	// attempted on a tag-only app (Branch empty). Move/re-push a matching
 	// tag instead, or PATCH the build-config to add a branch trigger.
 	BuildNeedsBranch = "BUILD_NEEDS_BRANCH"
+
+	// BuildLogNotAvailable — GET /api/v1/apps/:id/builds/:buildId/log-url was
+	// requested for a build that has no persisted log (e.g. still
+	// pending/running, never started, or the log upload failed).
+	BuildLogNotAvailable = "BUILD_LOG_NOT_AVAILABLE"
 )

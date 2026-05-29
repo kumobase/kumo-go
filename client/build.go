@@ -56,9 +56,11 @@ func (s *BuildsService) List(ctx context.Context, appID uint, opts ...ListOption
 	return out, meta, nil
 }
 
-// Get fetches a single build, including a short-lived presigned LogURL for its
-// build log when one was persisted. Returns codes.BuildNotFound when the build
+// Get fetches a single build. Returns codes.BuildNotFound when the build
 // doesn't exist for the app.
+//
+// The build log URL is no longer part of this response — fetch it on demand
+// with GetLogURL when you're about to open the log.
 func (s *BuildsService) Get(ctx context.Context, appID, buildID uint) (*types.BuildResponse, error) {
 	var out types.BuildResponse
 	_, _, err := s.c.do(ctx, "GET",
@@ -67,6 +69,21 @@ func (s *BuildsService) Get(ctx context.Context, appID, buildID uint) (*types.Bu
 		return nil, err
 	}
 	return &out, nil
+}
+
+// GetLogURL returns a freshly-minted, short-lived presigned URL to the build's
+// plain-text log. Call it only when about to open the log (the URL expires
+// quickly). Returns codes.BuildLogNotAvailable when the build has no persisted
+// log yet (still pending/running, or the upload failed), or codes.BuildNotFound
+// when the build doesn't exist for the app.
+func (s *BuildsService) GetLogURL(ctx context.Context, appID, buildID uint) (string, error) {
+	var out types.BuildLogURLResponse
+	_, _, err := s.c.do(ctx, "GET",
+		fmt.Sprintf("/api/v1/apps/%d/builds/%d/log-url", appID, buildID), nil, nil, &out)
+	if err != nil {
+		return "", err
+	}
+	return out.LogURL, nil
 }
 
 // Rebuild triggers a fresh build of the app's configured branch HEAD and

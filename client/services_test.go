@@ -3,6 +3,7 @@ package client_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -380,7 +381,9 @@ func TestBuilds_Smoke(t *testing.T) {
 		case r.Method == "GET" && r.URL.Path == "/api/v1/apps/7/builds":
 			fmt.Fprint(w, `{"message":"ok","data":[{"id":3,"app_id":7,"commit_sha":"abc","ref":"refs/heads/main","status":"succeeded","image_digest":"sha256:x","created_at":"2026-05-23T10:00:00Z"}],"meta":{"page":1,"page_size":20,"total_items":1,"total_pages":1}}`)
 		case r.Method == "GET" && r.URL.Path == "/api/v1/apps/7/builds/3":
-			writeStruct(w, 200, "", "ok", &types.BuildResponse{ID: 3, AppID: 7, Status: types.BuildStatusSucceeded, LogURL: "https://logs/3.txt?sig=x"})
+			writeStruct(w, 200, "", "ok", &types.BuildResponse{ID: 3, AppID: 7, Status: types.BuildStatusSucceeded})
+		case r.Method == "GET" && r.URL.Path == "/api/v1/apps/7/builds/3/log-url":
+			writeStruct(w, 200, "", "ok", &types.BuildLogURLResponse{LogURL: "https://logs/3.txt?sig=x"})
 		case r.Method == "POST" && r.URL.Path == "/api/v1/apps/7/builds":
 			writeStruct(w, 202, "", "queued", &types.BuildResponse{ID: 4, AppID: 7, Status: types.BuildStatusPending})
 		case r.Method == "POST" && r.URL.Path == "/api/v1/apps/7/builds/4/cancel":
@@ -401,8 +404,12 @@ func TestBuilds_Smoke(t *testing.T) {
 		t.Fatalf("List: %v (%+v)", err, builds)
 	}
 	got, err := c.Builds().Get(ctx, 7, 3)
-	if err != nil || got.LogURL == "" {
+	if err != nil || got.ID != 3 {
 		t.Fatalf("Get: %v (%+v)", err, got)
+	}
+	logURL, err := c.Builds().GetLogURL(ctx, 7, 3)
+	if err != nil || logURL != "https://logs/3.txt?sig=x" {
+		t.Fatalf("GetLogURL: %v (%q)", err, logURL)
 	}
 	rebuilt, err := c.Builds().Rebuild(ctx, 7)
 	if err != nil || rebuilt.ID != 4 {
@@ -414,6 +421,22 @@ func TestBuilds_Smoke(t *testing.T) {
 	}
 	if seen.method != "POST" || seen.path != "/api/v1/apps/7/builds/4/cancel" {
 		t.Errorf("last call: %s %s, want POST /api/v1/apps/7/builds/4/cancel", seen.method, seen.path)
+	}
+}
+
+// GetLogURL surfaces BUILD_LOG_NOT_AVAILABLE (404) as a typed APIError when the
+// build has no persisted log yet.
+func TestBuilds_GetLogURL_NotAvailable(t *testing.T) {
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		writeStruct(w, 404, codes.BuildLogNotAvailable, "build log not available", nil)
+	})
+	_, err := c.Builds().GetLogURL(context.Background(), 7, 3)
+	var apiErr *client.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T (%v)", err, err)
+	}
+	if apiErr.Code != codes.BuildLogNotAvailable {
+		t.Errorf("Code: got %q, want %q", apiErr.Code, codes.BuildLogNotAvailable)
 	}
 }
 
