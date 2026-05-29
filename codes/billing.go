@@ -9,4 +9,8 @@ const (
 	BillingInvalidDateRange         = "INVALID_DATE_RANGE"
 	BillingInvalidEnumValue         = "INVALID_ENUM_VALUE"
 	BillingBreakdownFailed          = "BREAKDOWN_FAILED"
+	// BillingInternalError is the catch-all 500 code for billing read endpoints
+	// (charges list, charge filters, summary). Stable so consumers can branch on
+	// it instead of the human-readable message.
+	BillingInternalError = "BILLING_INTERNAL_ERROR"
 )

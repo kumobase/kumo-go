@@ -105,11 +105,26 @@ type PublicGroupedChargeResponse struct {
 	StatusBreakdown map[string]int64 `json:"status_breakdown"`
 }
 
-// ProductBreakdown is per-product spending totals.
+// ChargeFiltersResponse is returned by GET /api/v1/billing/v2/charges/filters.
+// It exposes the vocabulary a client can pass to the charges list endpoint as
+// product_type / status filters. Split out of the list response so that endpoint
+// can return a flat {data:[...charges], meta} envelope.
+type ChargeFiltersResponse struct {
+	AvailableProductTypes []string `json:"available_product_types"`
+	AvailableStatuses     []string `json:"available_statuses"`
+}
+
+// ProductBreakdown is per-product spending totals. Every product type that can
+// be charged MUST have a field here; otherwise its spend is dropped from
+// by_product while still counting toward the period total, and the two no longer
+// reconcile. container_registry and database were added alongside the original
+// three for exactly this reason.
 type ProductBreakdown struct {
-	VPS     string `json:"vps"`
-	App     string `json:"app"`
-	Storage string `json:"storage"`
+	VPS               string `json:"vps"`
+	App               string `json:"app"`
+	Storage           string `json:"storage"`
+	ContainerRegistry string `json:"container_registry"`
+	Database          string `json:"database"`
 }
 
 // PeriodSummary is spend totals over a time period.
@@ -121,8 +136,10 @@ type PeriodSummary struct {
 }
 
 // BillingSummaryResponse is the spending overview returned by
-// GET /api/v1/billing/v2/summary. Only prepaid charges are included;
-// postpaid (pay-as-you-go) charges live in the breakdown endpoint.
+// GET /api/v1/billing/v2/summary. It sums all settled (charged) spend in the
+// period regardless of billing model — postpaid pay-as-you-go (app, storage)
+// is included, not just prepaid. The breakdown endpoint offers the same data
+// sliced over time.
 type BillingSummaryResponse struct {
 	Currency            string        `json:"currency"`
 	CurrentPeriod       PeriodSummary `json:"current_period"`
