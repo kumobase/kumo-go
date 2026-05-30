@@ -128,11 +128,20 @@ type ProductBreakdown struct {
 }
 
 // PeriodSummary is spend totals over a time period.
+//
+// TotalCharged/ByProduct cover only settled (charged) spend. Accruing/AccruingTotal
+// are the estimated, not-yet-charged usage for the current period — they let
+// monthly-postpaid products (e.g. container_registry, which bills once at period
+// end) be visible mid-period instead of reading 0 until the charge fires. Accruing
+// is "what would be charged right now" and is only populated for the current
+// period; it is not added into TotalCharged.
 type PeriodSummary struct {
-	Start        time.Time        `json:"start"`
-	End          time.Time        `json:"end"`
-	TotalCharged string           `json:"total_charged"`
-	ByProduct    ProductBreakdown `json:"by_product"`
+	Start         time.Time        `json:"start"`
+	End           time.Time        `json:"end"`
+	TotalCharged  string           `json:"total_charged"`
+	ByProduct     ProductBreakdown `json:"by_product"`
+	Accruing      ProductBreakdown `json:"accruing"`
+	AccruingTotal string           `json:"accruing_total"`
 }
 
 // BillingSummaryResponse is the spending overview returned by

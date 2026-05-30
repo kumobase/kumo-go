@@ -49,6 +49,13 @@ func TestBillingSummaryResponseRoundTrip(t *testing.T) {
 				VPS: "44750", App: "2971.6227", Storage: "9.2167",
 				ContainerRegistry: "0", Database: "0",
 			},
+			// container_registry is monthly-postpaid: 0 charged so far, but
+			// accruing surfaces the in-flight usage estimate for the period.
+			Accruing: ProductBreakdown{
+				VPS: "0", App: "1.2500", Storage: "0.4000",
+				ContainerRegistry: "44.2241", Database: "0",
+			},
+			AccruingTotal: "45.8741",
 		},
 	})
 }
