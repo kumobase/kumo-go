@@ -31,4 +31,11 @@ const (
 	VPSInvalidStatusFilter = "INVALID_STATUS_FILTER"
 	VPSInvalidTimeFilter  = "INVALID_TIME_FILTER"
 	VPSInternalError      = "INTERNAL_ERROR"
+
+	// VPSBillingSetupFailed is returned when a server was provisioned on the
+	// provider but its billing subscription could not be created; the rent is
+	// rolled back (user refunded, instance abandoned) and the caller should
+	// retry. Distinct from VPSInternalError so clients can present it as a
+	// safe-to-retry, no-charge outcome rather than an opaque 500.
+	VPSBillingSetupFailed = "BILLING_SETUP_FAILED"
 )
