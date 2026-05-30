@@ -141,7 +141,23 @@ func TestRegistry_RoundTrip(t *testing.T) {
 	})
 	roundTrip(t, "ManifestResponse", ManifestResponse{
 		ID: 1, Digest: "sha256:abc", MediaType: "application/vnd.oci.image.manifest.v1+json",
-		SizeBytes: 1024, ImageSizeBytes: 162203697, PushedAt: now,
+		Kind: "image", SizeBytes: 1024, ImageSizeBytes: 162203697, PushedAt: now,
+	})
+	layers := 8
+	roundTrip(t, "ManifestResponse/index", ManifestResponse{
+		ID: 12, Digest: "sha256:idx",
+		MediaType: "application/vnd.oci.image.index.v1+json",
+		Kind:      "index", SizeBytes: 1609, ImageSizeBytes: 51865119, PushedAt: now,
+		Platforms: []ManifestPlatform{
+			{
+				OS: "linux", Architecture: "amd64", Digest: "sha256:amd", Size: 1809,
+				Platform: "linux/amd64", ImageSizeBytes: 26031805, LayerCount: &layers,
+			},
+			{
+				OS: "unknown", Architecture: "unknown", Digest: "sha256:att", Size: 564,
+				Platform: "unknown/unknown", ArtifactType: "attestation",
+			},
+		},
 	})
 }
 
