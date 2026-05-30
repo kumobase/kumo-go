@@ -59,27 +59,35 @@ type SettingsResponse struct {
 //
 // Exactly one of (Architecture + OS) or Platforms will be populated after
 // hydration: image manifest → the former, manifest index → the latter.
+//
+// Kind is the stable discriminator: "image" for a single-platform image
+// manifest, "index" for a multi-platform manifest index / manifest list.
+// Prefer branching on Kind over inferring the shape from whether Platforms
+// is non-empty.
 type ManifestResponse struct {
 	ID        uint      `json:"id"`
 	Digest    string    `json:"digest"`
 	Tag       *string   `json:"tag,omitempty"`
 	MediaType string    `json:"media_type"`
+	Kind      string    `json:"kind"`       // "image" | "index"
 	SizeBytes int64     `json:"size_bytes"` // size of the manifest document itself
 	PushedAt  time.Time `json:"pushed_at"`
 
-	ConfigDigest   *string            `json:"config_digest,omitempty"`
-	Architecture   *string            `json:"architecture,omitempty"`
-	OS             *string            `json:"os,omitempty"`
-	OSVersion      *string            `json:"os_version,omitempty"`
-	Variant        *string            `json:"variant,omitempty"`
-	Platform       *string            `json:"platform,omitempty"` // display string "linux/arm64" or "linux/arm/v7"
-	ImageCreatedAt *time.Time         `json:"image_created_at,omitempty"`
-	Labels         map[string]string  `json:"labels,omitempty"`
-	LayerCount     *int               `json:"layer_count,omitempty"`
+	ConfigDigest   *string           `json:"config_digest,omitempty"`
+	Architecture   *string           `json:"architecture,omitempty"`
+	OS             *string           `json:"os,omitempty"`
+	OSVersion      *string           `json:"os_version,omitempty"`
+	Variant        *string           `json:"variant,omitempty"`
+	Platform       *string           `json:"platform,omitempty"` // display string "linux/arm64" or "linux/arm/v7"
+	ImageCreatedAt *time.Time        `json:"image_created_at,omitempty"`
+	Labels         map[string]string `json:"labels,omitempty"`
+	LayerCount     *int              `json:"layer_count,omitempty"`
 	// ImageSizeBytes is the total compressed image size — the sum of the
 	// manifest's layer blob sizes (config excluded), the figure registries
-	// like Docker Hub display. Populated at hydration for image manifests;
-	// 0/omitted for manifest indexes and not-yet-hydrated rows.
+	// like Docker Hub display. For an image manifest it is set at hydration.
+	// For an index it is computed at read time as the sum of its real
+	// platforms' image sizes (attestation entries excluded). 0/omitted for
+	// not-yet-hydrated rows or an index whose children aren't ingested yet.
 	ImageSizeBytes int64              `json:"image_size_bytes,omitempty"`
 	Platforms      []ManifestPlatform `json:"platforms,omitempty"`
 	HydratedAt     *time.Time         `json:"hydrated_at,omitempty"`
@@ -89,6 +97,13 @@ type ManifestResponse struct {
 // ManifestPlatform is one entry of a manifest index's child list. Platform
 // is the canonical "os/arch[/variant]" string used by docker buildx and k8s
 // node selectors.
+//
+// Size is the child manifest *document* descriptor size (small, ~1-2KB) — NOT
+// the image payload. ImageSizeBytes is the real compressed image size (sum of
+// the child's layer blobs), joined from the child manifest at read time; it is
+// 0 when the child has not been ingested/hydrated yet. ArtifactType is set to
+// "attestation" for Docker BuildKit SBOM/provenance entries (platform
+// unknown/unknown), which are excluded from the index's aggregate ImageSizeBytes.
 type ManifestPlatform struct {
 	OS           string `json:"os"`
 	Architecture string `json:"architecture"`
@@ -97,6 +112,10 @@ type ManifestPlatform struct {
 	Digest       string `json:"digest"`
 	Size         int64  `json:"size"`
 	Platform     string `json:"platform"`
+
+	ImageSizeBytes int64  `json:"image_size_bytes,omitempty"`
+	LayerCount     *int   `json:"layer_count,omitempty"`
+	ArtifactType   string `json:"artifact_type,omitempty"` // e.g. "attestation"
 }
 
 // RegistryPricingResponse is the public-facing pricing surface returned by
