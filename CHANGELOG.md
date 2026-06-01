@@ -6,6 +6,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.12.0]
+
+### Added
+- `types/jobs.go` — Jobs product surface: `Job`, `JobKind` (`app_attached` /
+  `standalone`), `JobDeploymentStatus`, `JobConcurrencyPolicy`,
+  `JobExecutionTrigger`, `JobExecutionStatus`, `JobSecretRef`,
+  `JobResourceTemplate`, `CreateJobRequest`, `UpdateJobRequest`, `JobResponse`,
+  `JobListItem`, `ResponseJobAsync`, `JobExecution`, `RunJobResponse`.
+- `codes/jobs.go` — 22 stable wire codes for `/api/v1/jobs/*`:
+  `JOB_NOT_FOUND`, `JOB_EXECUTION_NOT_FOUND`, `JOB_OPERATION_NOT_FOUND`,
+  `JOB_DEPLOYMENT_IN_PROGRESS`, `JOB_ALREADY_SUSPENDED`, `JOB_NOT_SUSPENDED`,
+  `JOB_QUOTA_EXCEEDED`, `JOB_INSUFFICIENT_BALANCE`, `JOB_SCHEDULE_INVALID`,
+  `JOB_SCHEDULE_TOO_FREQUENT`, `JOB_TIMEZONE_INVALID`, `JOB_KIND_INVALID`,
+  `JOB_APP_REQUIRED`, `JOB_APP_NOT_FOUND`, `JOB_IMAGE_REQUIRED`,
+  `JOB_CONCURRENCY_UNSUPPORTED`, `JOB_INVALID_PRICING_SLUG`,
+  `JOB_VALIDATION_FAILED`, `JOB_UNAUTHORIZED`, `JOB_INVALID_ID`,
+  `JOB_INVALID_REQUEST_BODY`, `JOB_INTERNAL_ERROR`.
+- `client/jobs.go` — `JobsService` with `Create`, `List`, `Get`, `GetByName`,
+  `Update`, `Delete`, `RunNow`, `Suspend`, `Resume`, `ListExecutions`,
+  `GetExecution`. Async mutations return `*ResponseJobAsync` (202 +
+  `operation_id`); reads return `(*JobResponse, etag, error)` for use with
+  `IfMatch(etag)` on subsequent `Update`.
+
 ## [v0.7.0]
 
 ### Added
