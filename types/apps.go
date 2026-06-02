@@ -13,6 +13,28 @@ const (
 	AppDeploymentStatusFailed    AppDeploymentStatus = "failed"
 )
 
+// App runtime status values reported in the AppStatus field of
+// AppByIdResponse / AppImageResponse. Computed server-side from the live
+// workload state; the field stays a plain string for wire back-compat, so
+// these are untyped string constants for direct comparison.
+//
+//   - AppStatusStopped also covers a user-initiated stop (suspend_reason
+//     "user"); only AppStatusSuspended means an involuntary stop (billing
+//     or admin).
+//   - AppStatusCrashing / AppStatusImageError surface the concrete runtime
+//     failure instead of a generic "degraded"/"deploying".
+const (
+	AppStatusRunning    = "running"
+	AppStatusStopped    = "stopped"
+	AppStatusDeploying  = "deploying"
+	AppStatusDegraded   = "degraded"
+	AppStatusCrashing   = "crashing"
+	AppStatusImageError = "image_error"
+	AppStatusFailed     = "failed"
+	AppStatusSuspended  = "suspended"
+	AppStatusUnknown    = "unknown"
+)
+
 // DomainVerificationStatus is the verification lifecycle of a custom domain
 // attached to an app.
 type DomainVerificationStatus string
