@@ -440,6 +440,73 @@ func TestBuilds_GetLogURL_NotAvailable(t *testing.T) {
 	}
 }
 
+// ── Public plan catalogues (pricing) ─────────────────────────────────
+
+// Apps().ListPlans hits GET /api/v1/apps/plans and flattens the
+// {"templates":[…]} wrapper to the inner slice.
+func TestApps_ListPlans(t *testing.T) {
+	var seen string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = r.URL.Path
+		writeStruct(w, 200, "", "ok", &types.PricingResponse{
+			Templates: []types.TemplateWithPricing{
+				{Slug: "kumo.nano", Name: "Nano", PriceMonth: "1080.00"},
+				{Slug: "kumo.small", Name: "Small", PriceMonth: "2160.00"},
+			},
+		})
+	})
+	plans, err := c.Apps().ListPlans(context.Background())
+	if err != nil || len(plans) != 2 || plans[0].Slug != "kumo.nano" || plans[0].PriceMonth != "1080.00" {
+		t.Fatalf("ListPlans: %v (%+v)", err, plans)
+	}
+	if seen != "/api/v1/apps/plans" {
+		t.Errorf("path: got %q, want /api/v1/apps/plans", seen)
+	}
+}
+
+// Registry().ListPlans hits GET /api/v1/registry/plans and flattens the
+// {"plans":[…]} wrapper.
+func TestRegistry_ListPlans(t *testing.T) {
+	var seen string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = r.URL.Path
+		writeStruct(w, 200, "", "ok", &types.RegistryPricingResponse{
+			Plans: []types.RegistryPlanOption{
+				{ID: 1, Name: "Storage", Unit: "GB-month", PricePerUnit: "0.50", Currency: "IDR", ChargeModel: "metered", BillingPeriod: "monthly"},
+			},
+		})
+	})
+	plans, err := c.Registry().ListPlans(context.Background())
+	if err != nil || len(plans) != 1 || plans[0].PricePerUnit != "0.50" {
+		t.Fatalf("ListPlans: %v (%+v)", err, plans)
+	}
+	if seen != "/api/v1/registry/plans" {
+		t.Errorf("path: got %q, want /api/v1/registry/plans", seen)
+	}
+}
+
+// Volumes().ListPlans hits GET /api/v1/volumes/plans — the one paginated
+// catalogue, so it returns *Meta alongside the slice.
+func TestVolumes_ListPlans(t *testing.T) {
+	var seen string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		fmt.Fprint(w, `{"message":"ok","data":[{"id":1,"slug":"ssd-std","name":"SSD Standard","price_per_gb_hour":"0.0001234","min_size_gb":1,"max_size_gb":1000}],"meta":{"page":1,"page_size":20,"total_items":1,"total_pages":1}}`)
+	})
+	tiers, meta, err := c.Volumes().ListPlans(context.Background())
+	if err != nil || len(tiers) != 1 || tiers[0].Slug != "ssd-std" || tiers[0].PricePerGBHour != "0.0001234" {
+		t.Fatalf("ListPlans: %v (%+v)", err, tiers)
+	}
+	if meta == nil || meta.TotalItems != 1 {
+		t.Fatalf("ListPlans meta: %+v", meta)
+	}
+	if seen != "/api/v1/volumes/plans" {
+		t.Errorf("path: got %q, want /api/v1/volumes/plans", seen)
+	}
+}
+
 // ── APIKeys (sessionOnly) ────────────────────────────────────────────
 
 func TestAPIKeys_SessionOnlyErrorSurfaces(t *testing.T) {

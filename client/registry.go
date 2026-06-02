@@ -34,6 +34,21 @@ func (r *RegistryService) Repos(orgSlug string) *RepositoriesService {
 	return &RepositoriesService{c: r.c, orgSlug: orgSlug}
 }
 
+// ListPlans returns the public container-registry plan catalogue (storage /
+// transfer billing tiers) from GET /api/v1/registry/plans. The server wraps
+// the catalogue in {"plans":[…]} — this method flattens it to the inner
+// slice for ergonomics. Internal cost structure (base cost, margin) is never
+// exposed; see types.RegistryPlanOption.
+func (r *RegistryService) ListPlans(ctx context.Context, opts ...ListOption) ([]types.RegistryPlanOption, error) {
+	q := resolveListOpts(opts)
+	var out types.RegistryPricingResponse
+	_, _, err := r.c.do(ctx, "GET", withQuery("/api/v1/registry/plans", q), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out.Plans, nil
+}
+
 // ── Organizations ──────────────────────────────────────────────────
 
 // OrganizationsService backs

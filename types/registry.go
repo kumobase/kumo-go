@@ -119,7 +119,7 @@ type ManifestPlatform struct {
 }
 
 // RegistryPricingResponse is the public-facing pricing surface returned by
-// GET /api/v1/registry/pricing. Plans is a list so new tiers can ship
+// GET /api/v1/registry/plans. Plans is a list so new tiers can ship
 // without breaking older clients.
 type RegistryPricingResponse struct {
 	Plans []RegistryPlanOption `json:"plans"`

@@ -146,6 +146,21 @@ func (s *AppsService) List(ctx context.Context, opts ...ListOption) ([]types.App
 	return out, meta, nil
 }
 
+// ListPlans returns the public app plan catalogue (CPU/memory tiers with
+// their hourly/daily/monthly price) from GET /api/v1/apps/plans. This is an
+// unauthenticated public surface; no app ownership is implied. The server
+// wraps the catalogue in {"templates":[…]} — this method flattens it to the
+// inner slice for ergonomics.
+func (s *AppsService) ListPlans(ctx context.Context, opts ...ListOption) ([]types.TemplateWithPricing, error) {
+	q := resolveListOpts(opts)
+	var out types.PricingResponse
+	_, _, err := s.c.do(ctx, "GET", withQuery("/api/v1/apps/plans", q), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out.Templates, nil
+}
+
 // ListOperations returns the async-operation history for an app, paginated.
 func (s *AppsService) ListOperations(ctx context.Context, appID uint, opts ...ListOption) ([]types.AppOperation, *types.Meta, error) {
 	q := resolveListOpts(opts)

@@ -59,7 +59,7 @@ type AttachVolumeRequest struct {
 }
 
 // StorageTierResponse describes one purchasable volume tier returned by
-// GET /api/v1/volumes/tiers (and embedded in VolumeResponse).
+// GET /api/v1/volumes/plans (and embedded in VolumeResponse).
 //
 // PricePerGBHour is a decimal string ("0.0001234"); parse with a decimal
 // library if you need arithmetic.

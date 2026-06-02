@@ -60,6 +60,20 @@ func (s *VolumesService) List(ctx context.Context, opts ...ListOption) ([]types.
 	return out, meta, nil
 }
 
+// ListPlans returns the public storage-tier catalogue (purchasable volume
+// tiers with their per-GB-hour price) from GET /api/v1/volumes/plans. Unlike
+// the other product catalogues, this endpoint is paginated server-side, so it
+// returns *Meta — page through with WithPage/WithPageSize when TotalPages > 1.
+func (s *VolumesService) ListPlans(ctx context.Context, opts ...ListOption) ([]types.StorageTierResponse, *types.Meta, error) {
+	q := resolveListOpts(opts)
+	var out []types.StorageTierResponse
+	meta, err := s.c.doList(ctx, "GET", withQuery("/api/v1/volumes/plans", q), &out)
+	if err != nil {
+		return nil, nil, err
+	}
+	return out, meta, nil
+}
+
 // Create provisions a new volume. Honors Idempotency-Key. If req.AppID is
 // set, the volume is attached on creation — see ForceReconfigure for the
 // "auto-scale app to 1 replica and disable autoscaling" opt-in.
