@@ -9,6 +9,7 @@ func TestAppStatusValues(t *testing.T) {
 	cases := map[string]string{
 		AppStatusRunning:    "running",
 		AppStatusStopped:    "stopped",
+		AppStatusBuilding:   "building",
 		AppStatusDeploying:  "deploying",
 		AppStatusDegraded:   "degraded",
 		AppStatusCrashing:   "crashing",

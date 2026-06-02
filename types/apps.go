@@ -23,9 +23,13 @@ const (
 //     or admin).
 //   - AppStatusCrashing / AppStatusImageError surface the concrete runtime
 //     failure instead of a generic "degraded"/"deploying".
+//   - AppStatusBuilding is reported for a git-build app whose first image is
+//     still being built (no workload exists yet); a rebuild of an already
+//     running app keeps reporting its live status instead.
 const (
 	AppStatusRunning    = "running"
 	AppStatusStopped    = "stopped"
+	AppStatusBuilding   = "building"
 	AppStatusDeploying  = "deploying"
 	AppStatusDegraded   = "degraded"
 	AppStatusCrashing   = "crashing"
