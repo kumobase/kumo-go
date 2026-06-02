@@ -112,6 +112,23 @@ type CreateAppRequest struct {
 	SecretVars             []SecretVar       `json:"secret_vars,omitempty"`
 	SecretFileMounts       []SecretFileMount `json:"secret_file_mounts,omitempty"`
 	HealthCheck            *HealthCheck      `json:"healthcheck,omitempty"`
+	Volume                 *CreateAppVolume  `json:"volume,omitempty"`
+}
+
+// CreateAppVolume optionally binds an existing, unattached volume to the app
+// during POST /api/v1/apps, mounting it into the app's first deployment so no
+// separate POST /volumes/:id/attach call (and its redeploy) is needed.
+//
+// Identify the volume by exactly one of VolumeID or VolumeName — the server
+// returns 400 VALIDATION_FAILED if both are set. The referenced volume must be
+// unattached (app_id is null) and ready/detached, and the app must have
+// Replicas == 1 with Autoscaling disabled; otherwise the create is rejected
+// (409 APP_VOLUME_CONFLICT). Volumes cannot be attached to build-on-push
+// (git-build) apps at create time. MountPath defaults to /data server-side.
+type CreateAppVolume struct {
+	VolumeID   *uint  `json:"volume_id,omitempty"`
+	VolumeName string `json:"volume_name,omitempty"`
+	MountPath  string `json:"mount_path,omitempty"`
 }
 
 // UpdateAppRequest is the body for PATCH /api/v1/apps/:id. PATCH-semantics:

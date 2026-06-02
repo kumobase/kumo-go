@@ -270,3 +270,4 @@ func TestBuild_RoundTrip(t *testing.T) {
 func intPtr(v int) *int       { return &v }
 func strPtr(v string) *string { return &v }
 func u16Ptr(v uint16) *uint16 { return &v }
+func uintPtr(v uint) *uint    { return &v }

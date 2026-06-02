@@ -73,3 +73,31 @@ func TestUpdateAppRequest_PatchSemantics_ImageOmittedNotInJSON(t *testing.T) {
 		t.Fatalf("Image key should be absent from marshalled output, got %s", b)
 	}
 }
+
+// TestCreateAppRequest_VolumeOmittedWhenNil asserts the optional volume block
+// is absent from the wire when not requested, so existing no-volume creates
+// are byte-identical to before the field was added.
+func TestCreateAppRequest_VolumeOmittedWhenNil(t *testing.T) {
+	req := CreateAppRequest{BaseCreateApp: BaseCreateApp{Name: "my-app", Image: "nginx", Port: 80, Replicas: 1}}
+	b, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(b), `"volume"`) {
+		t.Fatalf("volume key should be absent when Volume is nil, got %s", b)
+	}
+}
+
+// TestCreateAppVolume_RoundTrip covers both attach-by-id and attach-by-name
+// shapes, asserting the volume block survives a marshal/unmarshal cycle and
+// that VolumeID stays a pointer (so omitempty distinguishes "unset" from 0).
+func TestCreateAppVolume_RoundTrip(t *testing.T) {
+	roundTrip(t, "CreateAppVolume/by-id", CreateAppRequest{
+		BaseCreateApp: BaseCreateApp{Name: "my-app", Image: "nginx", Port: 80, Replicas: 1},
+		Volume:        &CreateAppVolume{VolumeID: uintPtr(7), MountPath: "/data"},
+	})
+	roundTrip(t, "CreateAppVolume/by-name", CreateAppRequest{
+		BaseCreateApp: BaseCreateApp{Name: "my-app", Image: "nginx", Port: 80, Replicas: 1},
+		Volume:        &CreateAppVolume{VolumeName: "pgdata"},
+	})
+}

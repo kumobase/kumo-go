@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.12.1]
+
+### Added
+- `types/apps.go` — `CreateAppVolume` and a new optional `Volume *CreateAppVolume`
+  field on `CreateAppRequest`. Lets `POST /api/v1/apps` bind an existing,
+  unattached volume to the app in the same request (mounted into the app's
+  first deployment), identified by exactly one of `VolumeID` / `VolumeName`.
+  Reuses existing wire codes: `VALIDATION_FAILED` (shape / git-build rejection),
+  `APP_VOLUME_CONFLICT` (replicas>1 or autoscaling, or volume already attached),
+  `VOLUME_NOT_FOUND`. Additive and backward compatible — omitting `volume`
+  preserves the prior wire shape byte-for-byte.
+
 ## [v0.12.0]
 
 ### Added
