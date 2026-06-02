@@ -11,6 +11,10 @@ type VolumeStatus string
 const (
 	VolumeStatusCreating VolumeStatus = "creating"
 	VolumeStatusReady    VolumeStatus = "ready"
+	// Deprecated: the server no longer emits "detached". An unattached volume is
+	// now reported as VolumeStatusReady; attachment is conveyed by AppID/MountPath.
+	// Retained so existing references compile and so a client talking to an older
+	// server still recognizes the value.
 	VolumeStatusDetached VolumeStatus = "detached"
 	VolumeStatusResizing VolumeStatus = "resizing"
 	VolumeStatusDeleting VolumeStatus = "deleting"
