@@ -14,6 +14,7 @@ const (
 	AppCustomDomainExists       = "APP_CUSTOM_DOMAIN_EXISTS"
 	AppDomainAlreadyInUse       = "APP_DOMAIN_ALREADY_IN_USE"
 	AppVolumeConflict           = "APP_VOLUME_CONFLICT"
+	AppHasJobs                  = "APP_HAS_JOBS"
 	AppQuotaExceeded            = "APP_QUOTA_EXCEEDED"
 
 	AppInvalidPricingSlug = "APP_INVALID_PRICING_SLUG"
