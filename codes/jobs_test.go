@@ -32,6 +32,8 @@ func TestJobsCodeValues(t *testing.T) {
 		{"JobInvalidID", JobInvalidID, "JOB_INVALID_ID"},
 		{"JobInvalidRequestBody", JobInvalidRequestBody, "JOB_INVALID_REQUEST_BODY"},
 		{"JobInternalError", JobInternalError, "JOB_INTERNAL_ERROR"},
+		{"JobMetricsInternalError", JobMetricsInternalError, "JOB_METRICS_INTERNAL_ERROR"},
+		{"JobLogsInternalError", JobLogsInternalError, "JOB_LOGS_INTERNAL_ERROR"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {

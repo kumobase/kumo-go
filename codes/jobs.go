@@ -32,4 +32,11 @@ const (
 	JobInvalidID          = "JOB_INVALID_ID"
 	JobInvalidRequestBody = "JOB_INVALID_REQUEST_BODY"
 	JobInternalError      = "JOB_INTERNAL_ERROR"
+
+	// Per-execution observability (metrics/logs) internal-error fallbacks. The
+	// transport/validation failures reuse the cross-cutting codes
+	// INVALID_TIME_RANGE / INVALID_LOG_FILTER / METRICS_BACKEND_UNAVAILABLE /
+	// LOGS_BACKEND_UNAVAILABLE; these cover the unmapped 500 default.
+	JobMetricsInternalError = "JOB_METRICS_INTERNAL_ERROR"
+	JobLogsInternalError    = "JOB_LOGS_INTERNAL_ERROR"
 )
