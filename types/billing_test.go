@@ -16,6 +16,7 @@ func TestProductBreakdownRoundTrip(t *testing.T) {
 		Storage:           "9.2167",
 		ContainerRegistry: "44.2241",
 		Database:          "0",
+		Jobs:              "12.5",
 	}
 	roundTrip(t, "ProductBreakdown", pb)
 
@@ -23,7 +24,7 @@ func TestProductBreakdownRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
-	for _, key := range []string{"vps", "app", "storage", "container_registry", "database"} {
+	for _, key := range []string{"vps", "app", "storage", "container_registry", "database", "jobs"} {
 		if !strings.Contains(string(b), `"`+key+`"`) {
 			t.Errorf("ProductBreakdown JSON missing %q key: %s", key, b)
 		}
