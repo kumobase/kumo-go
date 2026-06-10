@@ -21,6 +21,12 @@ const (
 	// steer the user to Google sign-in.
 	NoPasswordSet = "NO_PASSWORD_SET"
 
+	// AccountLocked — login is temporarily blocked after too many consecutive
+	// failed attempts on this account. Returned with HTTP 429; the user should
+	// wait for the lockout window to elapse (or reset their password, which
+	// also clears the lock) before retrying.
+	AccountLocked = "ACCOUNT_LOCKED"
+
 	// EmailAlreadyRegistered — registration was rejected because the email is
 	// already in use (UNIQUE(email) violation).
 	EmailAlreadyRegistered = "EMAIL_ALREADY_REGISTERED"

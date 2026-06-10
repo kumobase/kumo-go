@@ -13,6 +13,7 @@ func TestAuthCodeValues(t *testing.T) {
 		{"InvalidCredentials", InvalidCredentials, "INVALID_CREDENTIALS"},
 		{"EmailNotVerified", EmailNotVerified, "EMAIL_NOT_VERIFIED"},
 		{"NoPasswordSet", NoPasswordSet, "NO_PASSWORD_SET"},
+		{"AccountLocked", AccountLocked, "ACCOUNT_LOCKED"},
 		{"EmailAlreadyRegistered", EmailAlreadyRegistered, "EMAIL_ALREADY_REGISTERED"},
 		{"UserAlreadyVerified", UserAlreadyVerified, "USER_ALREADY_VERIFIED"},
 		{"VerificationTokenInvalid", VerificationTokenInvalid, "VERIFICATION_TOKEN_INVALID"},
