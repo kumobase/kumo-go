@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.17.0]
+
+### Changed
+- **BREAKING:** `types/registry.go` — removed the `SoftDeleteDays` field from
+  `CreateRepositoryRequest`, `UpdateRepositoryRequest`, and `RepositoryResponse`.
+  The registry purge window is now a fixed internal policy (7 days) and is no
+  longer user-configurable or surfaced on the wire. Clients that previously set
+  or read `soft_delete_days` must drop it; the server silently ignores the field
+  on requests and never emits it on responses.
+
+### Deprecated
+- `codes/registry.go` — `RegistryInvalidSoftDeleteDays` is retained for wire
+  stability but is no longer returned by the server (the validation it guarded
+  was removed alongside the field).
+
 ## [v0.12.1]
 
 ### Added
