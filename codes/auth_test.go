@@ -27,6 +27,13 @@ func TestAuthCodeValues(t *testing.T) {
 		{"GoogleAccountLinked", GoogleAccountLinked, "GOOGLE_ACCOUNT_LINKED"},
 		{"AuthInvalidRequestBody", AuthInvalidRequestBody, "AUTH_INVALID_REQUEST_BODY"},
 		{"AuthInternalError", AuthInternalError, "AUTH_INTERNAL_ERROR"},
+		{"UserNotFound", UserNotFound, "USER_NOT_FOUND"},
+		{"CannotDemoteSelf", CannotDemoteSelf, "CANNOT_DEMOTE_SELF"},
+		{"CannotRemoveLastAdmin", CannotRemoveLastAdmin, "CANNOT_REMOVE_LAST_ADMIN"},
+		{"CannotDeleteLastAdmin", CannotDeleteLastAdmin, "CANNOT_DELETE_LAST_ADMIN"},
+		{"CannotUnverifyUser", CannotUnverifyUser, "CANNOT_UNVERIFY_USER"},
+		{"CannotSuspendSelf", CannotSuspendSelf, "CANNOT_SUSPEND_SELF"},
+		{"UserHasActiveDeployments", UserHasActiveDeployments, "USER_HAS_ACTIVE_DEPLOYMENTS"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {
