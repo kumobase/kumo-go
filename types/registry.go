@@ -16,20 +16,17 @@ const (
 //
 // Name must match the OCI distribution name-component grammar (lowercase
 // letters/digits with single '.', '_' or '-' as internal separators), max
-// 255 chars. TagMutability defaults to MUTABLE; SoftDeleteDays defaults to
-// the org's setting when nil.
+// 255 chars. TagMutability defaults to MUTABLE.
 type CreateRepositoryRequest struct {
-	Name           string        `json:"name"`
-	TagMutability  TagMutability `json:"tag_mutability,omitempty"`
-	SoftDeleteDays *int          `json:"soft_delete_days,omitempty"`
+	Name          string        `json:"name"`
+	TagMutability TagMutability `json:"tag_mutability,omitempty"`
 }
 
 // UpdateRepositoryRequest is the body for PATCH
 // /api/v1/registry/organizations/:slug/repositories/:repo. Pointer fields
 // signal "only update if provided".
 type UpdateRepositoryRequest struct {
-	TagMutability  *TagMutability `json:"tag_mutability,omitempty"`
-	SoftDeleteDays *int           `json:"soft_delete_days,omitempty"`
+	TagMutability *TagMutability `json:"tag_mutability,omitempty"`
 }
 
 // UpdateSettingsRequest is the body for PATCH /api/v1/registry/settings
@@ -40,12 +37,11 @@ type UpdateSettingsRequest struct {
 
 // RepositoryResponse is the detail shape returned by every repo endpoint.
 type RepositoryResponse struct {
-	ID             uint          `json:"id"`
-	Name           string        `json:"name"`
-	TagMutability  TagMutability `json:"tag_mutability"`
-	SoftDeleteDays int           `json:"soft_delete_days"`
-	CreatedAt      time.Time     `json:"created_at"`
-	UpdatedAt      time.Time     `json:"updated_at"`
+	ID            uint          `json:"id"`
+	Name          string        `json:"name"`
+	TagMutability TagMutability `json:"tag_mutability"`
+	CreatedAt     time.Time     `json:"created_at"`
+	UpdatedAt     time.Time     `json:"updated_at"`
 }
 
 // SettingsResponse is the per-org registry settings DTO.

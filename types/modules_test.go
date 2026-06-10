@@ -133,11 +133,11 @@ func TestVolumes_RoundTrip(t *testing.T) {
 func TestRegistry_RoundTrip(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	roundTrip(t, "CreateRepositoryRequest", CreateRepositoryRequest{
-		Name: "my-app", TagMutability: TagMutabilityImmutable, SoftDeleteDays: intPtr(7),
+		Name: "my-app", TagMutability: TagMutabilityImmutable,
 	})
 	roundTrip(t, "RepositoryResponse", RepositoryResponse{
 		ID: 1, Name: "my-app", TagMutability: TagMutabilityMutable,
-		SoftDeleteDays: 7, CreatedAt: now, UpdatedAt: now,
+		CreatedAt: now, UpdatedAt: now,
 	})
 	roundTrip(t, "ManifestResponse", ManifestResponse{
 		ID: 1, Digest: "sha256:abc", MediaType: "application/vnd.oci.image.manifest.v1+json",
