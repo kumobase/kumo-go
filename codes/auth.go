@@ -76,3 +76,42 @@ const (
 	// AuthInternalError — an unexpected server-side failure in the auth flow.
 	AuthInternalError = "AUTH_INTERNAL_ERROR"
 )
+
+// Admin auth wire codes returned by the admin user-management endpoints
+// (modules/auth/admin_handler.go). These cover safety rails on mutating
+// other users' accounts: promotions/demotions, suspension, verification,
+// and deletion. Branch on these constants rather than the Message field.
+//
+// Note: the admin email-conflict case (ErrEmailAlreadyExists) reuses the
+// existing EmailAlreadyRegistered code; the no-fields-to-update case reuses
+// the cross-cutting ValidationFailed code. No new code is added for those.
+const (
+	// UserNotFound — the target user id did not resolve to an account (HTTP
+	// 404). Returned by every admin user-management endpoint.
+	UserNotFound = "USER_NOT_FOUND"
+
+	// CannotDemoteSelf — an admin attempted to change their own admin status
+	// (HTTP 409). Admins cannot self-demote.
+	CannotDemoteSelf = "CANNOT_DEMOTE_SELF"
+
+	// CannotRemoveLastAdmin — removing admin status would leave the platform
+	// with no admins (HTTP 409).
+	CannotRemoveLastAdmin = "CANNOT_REMOVE_LAST_ADMIN"
+
+	// CannotDeleteLastAdmin — deleting this user would leave the platform with
+	// no admins (HTTP 409).
+	CannotDeleteLastAdmin = "CANNOT_DELETE_LAST_ADMIN"
+
+	// CannotUnverifyUser — an admin attempted to un-verify a user who is
+	// already verified, which is not permitted (HTTP 409).
+	CannotUnverifyUser = "CANNOT_UNVERIFY_USER"
+
+	// CannotSuspendSelf — an admin attempted to suspend their own account
+	// (HTTP 409).
+	CannotSuspendSelf = "CANNOT_SUSPEND_SELF"
+
+	// UserHasActiveDeployments — the target user could not be deleted because
+	// they still have active deployments that must be torn down first (HTTP
+	// 409).
+	UserHasActiveDeployments = "USER_HAS_ACTIVE_DEPLOYMENTS"
+)

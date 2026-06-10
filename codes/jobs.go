@@ -39,4 +39,10 @@ const (
 	// LOGS_BACKEND_UNAVAILABLE; these cover the unmapped 500 default.
 	JobMetricsInternalError = "JOB_METRICS_INTERNAL_ERROR"
 	JobLogsInternalError    = "JOB_LOGS_INTERNAL_ERROR"
+
+	// JobOperationFailed is the error_code persisted on a job_operations row
+	// (and surfaced when polling the operation) when an async deployment
+	// operation fails. It is an outcome code on the operation record rather
+	// than an HTTP-response code.
+	JobOperationFailed = "JOB_OPERATION_FAILED"
 )
