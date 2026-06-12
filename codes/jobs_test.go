@@ -37,6 +37,7 @@ func TestJobsCodeValues(t *testing.T) {
 		{"JobInternalError", JobInternalError, "JOB_INTERNAL_ERROR"},
 		{"JobMetricsInternalError", JobMetricsInternalError, "JOB_METRICS_INTERNAL_ERROR"},
 		{"JobLogsInternalError", JobLogsInternalError, "JOB_LOGS_INTERNAL_ERROR"},
+		{"JobInvalidStatsWindow", JobInvalidStatsWindow, "JOB_INVALID_STATS_WINDOW"},
 		{"JobOperationFailed", JobOperationFailed, "JOB_OPERATION_FAILED"},
 	}
 	for _, tc := range cases {

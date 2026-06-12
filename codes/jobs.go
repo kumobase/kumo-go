@@ -47,6 +47,11 @@ const (
 	JobMetricsInternalError = "JOB_METRICS_INTERNAL_ERROR"
 	JobLogsInternalError    = "JOB_LOGS_INTERNAL_ERROR"
 
+	// JobInvalidStatsWindow is returned by GET /api/v1/jobs/:id/stats when the
+	// from/to window or granularity is invalid (unparseable bound, from >= to,
+	// unknown granularity, or a window that would produce too many buckets).
+	JobInvalidStatsWindow = "JOB_INVALID_STATS_WINDOW"
+
 	// JobOperationFailed is the error_code persisted on a job_operations row
 	// (and surfaced when polling the operation) when an async deployment
 	// operation fails. It is an outcome code on the operation record rather
