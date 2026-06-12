@@ -25,6 +25,13 @@ const (
 	JobImageRequired      = "JOB_IMAGE_REQUIRED"
 	JobConcurrencyUnsupported = "JOB_CONCURRENCY_UNSUPPORTED"
 
+	// Standalone-job image validation (registry manifest lookup at create),
+	// mirroring the apps image check. A malformed reference reuses
+	// JobValidationFailed.
+	JobImageNotFound            = "JOB_IMAGE_NOT_FOUND"
+	JobImageUnauthorized        = "JOB_IMAGE_UNAUTHORIZED"
+	JobImageRegistryUnreachable = "JOB_IMAGE_REGISTRY_UNREACHABLE"
+
 	JobInvalidPricingSlug = "JOB_INVALID_PRICING_SLUG"
 
 	JobValidationFailed   = "JOB_VALIDATION_FAILED"
