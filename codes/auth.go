@@ -75,6 +75,37 @@ const (
 
 	// AuthInternalError — an unexpected server-side failure in the auth flow.
 	AuthInternalError = "AUTH_INTERNAL_ERROR"
+
+	// RefreshTokenMissing — POST /api/v1/auth/refresh was called without a
+	// refresh token (neither the refresh_token cookie nor a body field).
+	// Returned with HTTP 400. The client should send the user to login.
+	RefreshTokenMissing = "REFRESH_TOKEN_MISSING"
+
+	// RefreshTokenInvalid — the supplied refresh token did not match any
+	// issued token (mistyped, forged, or already pruned). HTTP 401; both
+	// auth cookies are cleared. The client should send the user to login.
+	RefreshTokenInvalid = "REFRESH_TOKEN_INVALID"
+
+	// RefreshTokenExpired — the refresh token is past its expiry (or the
+	// session hit its absolute maximum lifetime). HTTP 401; cookies cleared.
+	// The user must log in again.
+	RefreshTokenExpired = "REFRESH_TOKEN_EXPIRED"
+
+	// RefreshTokenRevoked — the refresh token was explicitly revoked
+	// (logout, logout-all, password reset, or account suspension). HTTP 401;
+	// cookies cleared.
+	RefreshTokenRevoked = "REFRESH_TOKEN_REVOKED"
+
+	// RefreshTokenReused — an already-rotated refresh token was presented
+	// outside the rotation grace window, which is treated as token theft. The
+	// entire session family is revoked server-side (RFC-6819). HTTP 401;
+	// cookies cleared. The user must log in again on every device.
+	RefreshTokenReused = "REFRESH_TOKEN_REUSED"
+
+	// RefreshAccountInactive — the account was suspended, locked, unverified,
+	// or deleted between token issuance and refresh, so a new access token
+	// cannot be minted. The session family is revoked. HTTP 401.
+	RefreshAccountInactive = "REFRESH_ACCOUNT_INACTIVE"
 )
 
 // Admin auth wire codes returned by the admin user-management endpoints

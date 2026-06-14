@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.24.0]
+
+### Added
+- `codes/auth.go` — six new refresh-flow wire codes returned by the new
+  `POST /api/v1/auth/refresh` endpoint: `REFRESH_TOKEN_MISSING`,
+  `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_EXPIRED`, `REFRESH_TOKEN_REVOKED`,
+  `REFRESH_TOKEN_REUSED`, and `REFRESH_ACCOUNT_INACTIVE`.
+- `types/auth.go` — `RefreshRequest` and `RefreshResponse` DTOs for the
+  refresh endpoint (rotating refresh tokens).
+- `client/auth_service.go` — `Client.Auth()` with `Refresh`, `Logout`, and
+  `LogoutAll` methods for session-lifecycle management from a CLI/SDK client.
+  Automatic single-flight "refresh on 401" remains a calling-application
+  concern (browser cookie clients), not built into this stateless SDK.
+
 ## [v0.17.0]
 
 ### Changed
