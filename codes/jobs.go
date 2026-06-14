@@ -8,6 +8,12 @@ const (
 	JobExecutionNotFound = "JOB_EXECUTION_NOT_FOUND"
 	JobOperationNotFound = "JOB_OPERATION_NOT_FOUND"
 
+	// JobExecutionExpired is returned (410 Gone) when an execution exists but is
+	// older than JobLogsRetentionHours, so it has aged out of the user-facing
+	// list/get surface. Distinct from JobExecutionNotFound so clients can tell
+	// "aged out" from "never existed". The row is retained in the DB for billing.
+	JobExecutionExpired = "JOB_EXECUTION_EXPIRED"
+
 	JobDeploymentInProgress = "JOB_DEPLOYMENT_IN_PROGRESS"
 	JobAlreadySuspended     = "JOB_ALREADY_SUSPENDED"
 	JobNotSuspended         = "JOB_NOT_SUSPENDED"

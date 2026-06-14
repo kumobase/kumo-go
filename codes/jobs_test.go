@@ -12,6 +12,7 @@ func TestJobsCodeValues(t *testing.T) {
 	}{
 		{"JobNotFound", JobNotFound, "JOB_NOT_FOUND"},
 		{"JobExecutionNotFound", JobExecutionNotFound, "JOB_EXECUTION_NOT_FOUND"},
+		{"JobExecutionExpired", JobExecutionExpired, "JOB_EXECUTION_EXPIRED"},
 		{"JobOperationNotFound", JobOperationNotFound, "JOB_OPERATION_NOT_FOUND"},
 		{"JobDeploymentInProgress", JobDeploymentInProgress, "JOB_DEPLOYMENT_IN_PROGRESS"},
 		{"JobAlreadySuspended", JobAlreadySuspended, "JOB_ALREADY_SUSPENDED"},
