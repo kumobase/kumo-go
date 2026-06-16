@@ -18,8 +18,14 @@ const (
 	// instances (running instances keep their pinned flavor version).
 	RDSFlavorDisabled = "RDS_FLAVOR_DISABLED"
 
-	// RDSEngineNotSupported — the requested engine/version is not offered.
+	// RDSEngineNotSupported — the requested engine is not offered (e.g. a
+	// non-postgresql engine at launch).
 	RDSEngineNotSupported = "RDS_ENGINE_NOT_SUPPORTED"
+
+	// RDSEngineVersionNotSupported — the requested engine_version is not in the
+	// active version catalogue (unknown, disabled, or end-of-life). Call
+	// GET /api/v1/rds/engine-versions for the offered set.
+	RDSEngineVersionNotSupported = "RDS_ENGINE_VERSION_NOT_SUPPORTED"
 
 	// RDSActionInProgress — a lifecycle action (provision/scale/resize/delete)
 	// is already running on this instance; the new request was rejected. Poll
@@ -69,4 +75,45 @@ const (
 
 	// RDSInternalError — unexpected server-side failure. Safe to retry.
 	RDSInternalError = "RDS_INTERNAL_ERROR"
+
+	// RDSNamespaceTerminating — the tenant's Kubernetes namespace is still being
+	// torn down from a previous (last) database deletion, so a new instance
+	// cannot be created yet. Transient; retry after a few seconds.
+	RDSNamespaceTerminating = "RDS_NAMESPACE_TERMINATING"
+
+	// ── Parameter templates (DB-engine configuration groups) ──────────────────
+
+	// RDSParameterTemplateNotFound — no parameter template with the given
+	// id/slug exists in the caller's scope.
+	RDSParameterTemplateNotFound = "RDS_PARAMETER_TEMPLATE_NOT_FOUND"
+
+	// RDSParameterTemplateReadOnly — the template is a system/default template
+	// and cannot be edited or deleted. Clone it, then edit the copy.
+	RDSParameterTemplateReadOnly = "RDS_PARAMETER_TEMPLATE_READ_ONLY"
+
+	// RDSParameterTemplateInUse — the template is attached to one or more
+	// instances and cannot be deleted until they detach.
+	RDSParameterTemplateInUse = "RDS_PARAMETER_TEMPLATE_IN_USE"
+
+	// RDSParameterNotAllowed — a parameter in the request is not in the
+	// engine-version's editable allowlist (managed/unsafe params are blocked).
+	RDSParameterNotAllowed = "RDS_PARAMETER_NOT_ALLOWED"
+
+	// RDSParameterInvalidValue — a parameter value failed type/range/enum
+	// validation against the catalogue.
+	RDSParameterInvalidValue = "RDS_PARAMETER_INVALID_VALUE"
+
+	// RDSParameterTemplateVersionMismatch — the template's engine version does
+	// not match the instance's (a template applies only within its version, like
+	// an AWS parameter-group family).
+	RDSParameterTemplateVersionMismatch = "RDS_PARAMETER_TEMPLATE_VERSION_MISMATCH"
+
+	// ── Read replicas / HA ────────────────────────────────────────────────────
+
+	// RDSReadReplicaLimitExceeded — the requested read-replica count exceeds the
+	// plan's per-flavor cap or the platform hard ceiling.
+	RDSReadReplicaLimitExceeded = "RDS_READ_REPLICA_LIMIT_EXCEEDED"
+
+	// RDSInvalidMode — the requested topology mode is not standalone|ha.
+	RDSInvalidMode = "RDS_INVALID_MODE"
 )

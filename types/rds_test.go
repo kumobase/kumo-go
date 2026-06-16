@@ -10,6 +10,15 @@ func TestRDSRoundTrip(t *testing.T) {
 		Plan:          "kumo.pg.small",
 		StorageGB:     20,
 	})
+	sslOn := true
+	roundTrip(t, "CreateRDSInstanceRequest+ssl", CreateRDSInstanceRequest{
+		Name:          "my-pg",
+		Engine:        RDSEnginePostgreSQL,
+		EngineVersion: "16",
+		Plan:          "kumo.pg.small",
+		StorageGB:     20,
+		SSLEnabled:    &sslOn,
+	})
 	sz := 50
 	roundTrip(t, "UpdateRDSInstanceRequest+storage", UpdateRDSInstanceRequest{
 		StorageGB: &sz,
@@ -32,6 +41,38 @@ func TestRDSRoundTrip(t *testing.T) {
 		PriceHour:    "50.0000",
 		Availability: &Availability{Available: false, Reason: AvailabilityReasonMemoryFull},
 	})
+	roundTrip(t, "PublicRDSEngineVersionResponse", PublicRDSEngineVersionResponse{
+		Engine:    RDSEnginePostgreSQL,
+		Version:   "16",
+		IsDefault: true,
+		Status:    "supported",
+	})
+	roundTrip(t, "RDSPgParameterResponse", RDSPgParameterResponse{
+		Name: "max_connections", DataType: "int", ApplyMethod: "static",
+		DefaultValue: "100", MinValue: "1", MaxValue: "8000", Unit: "", Description: "max client connections",
+	})
+	roundTrip(t, "PublicRDSParameterTemplateResponse", PublicRDSParameterTemplateResponse{
+		ID: 3, Slug: "pg16-oltp", Name: "OLTP tuned", Engine: RDSEnginePostgreSQL, EngineVersion: "16",
+		IsSystem: false, IsDefault: false,
+		Parameters: []RDSParameter{{Name: "max_connections", Value: "200"}, {Name: "work_mem", Value: "8MB"}},
+	})
+	desc := "tuned"
+	roundTrip(t, "UpdateRDSParameterTemplateRequest", UpdateRDSParameterTemplateRequest{
+		Description: &desc,
+		Parameters:  []RDSParameter{{Name: "work_mem", Value: "16MB"}},
+	})
+	roundTrip(t, "CreateRDSInstanceRequest+template", CreateRDSInstanceRequest{
+		Name: "my-pg", Engine: RDSEnginePostgreSQL, EngineVersion: "16", Plan: "kumo.pg.small",
+		StorageGB: 20, ParameterTemplate: "pg16-oltp",
+	})
+	rr := 2
+	roundTrip(t, "CreateRDSInstanceRequest+ha", CreateRDSInstanceRequest{
+		Name: "my-pg", Engine: RDSEnginePostgreSQL, EngineVersion: "16", Plan: "kumo.pg.small",
+		StorageGB: 20, Mode: string(RDSModeHA), ReadReplicas: &rr,
+	})
+	roundTrip(t, "UpdateRDSInstanceRequest+replicas", UpdateRDSInstanceRequest{
+		Mode: string(RDSModeHA), ReadReplicas: &rr,
+	})
 	roundTrip(t, "RDSInstanceResponse", RDSInstanceResponse{
 		ID:            7,
 		Name:          "my-pg",
@@ -46,6 +87,7 @@ func TestRDSRoundTrip(t *testing.T) {
 		EndpointPort:  5432,
 		IsSuspended:   true,
 		SuspendReason: "insufficient balance",
+		SSLEnabled:    true,
 	})
 	roundTrip(t, "RDSMutationResponse", RDSMutationResponse{
 		ID:          7,
@@ -64,5 +106,14 @@ func TestRDSRoundTrip(t *testing.T) {
 		Database: "kumo",
 		Password: "s3cr3t",
 		SSLMode:  "require",
+		CACert:   "-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n",
+	})
+	roundTrip(t, "RDSConnectionResponse+nossl", RDSConnectionResponse{
+		Host:     "my-pg.db.kumo.example",
+		Port:     5432,
+		Username: "kumo",
+		Database: "kumo",
+		Password: "s3cr3t",
+		SSLMode:  "disable",
 	})
 }

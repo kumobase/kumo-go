@@ -21,9 +21,10 @@ const (
 	RDSStatusDeleted RDSStatus = "deleted"
 )
 
-// RDSMode is the topology a database is running in. It is derived from the
-// replica count (standalone == 1 replica, ha == 3) — never set directly by the
-// client; switching modes is a future scale operation.
+// RDSMode is the topology a database runs in. "standalone" is a single primary;
+// "ha" adds one synchronous standby for no-data-loss failover. Read replicas
+// (asynchronous standbys) are a separate count layered on either mode. Chosen at
+// create and changeable live via PATCH (mode / read_replicas).
 type RDSMode string
 
 const (
@@ -60,6 +61,20 @@ type CreateRDSInstanceRequest struct {
 	EngineVersion string `json:"engine_version"` // e.g. "16"
 	Plan          string `json:"plan"`           // plan slug, e.g. "kumo.pg.small"
 	StorageGB     int    `json:"storage_gb"`     // >= tier minimum
+	// SSLEnabled toggles TLS for the database connection. Pointer so the field
+	// is optional on the wire: omit (nil) to take the secure default (TLS on).
+	// When true, the connection is encrypted and GET .../connection returns a
+	// ca_cert clients can use for full verification. Set at create; immutable.
+	SSLEnabled *bool `json:"ssl_enabled,omitempty"`
+	// ParameterTemplate is the slug of a parameter template to attach (must match
+	// the instance's engine version). Omit to use the version's default template.
+	ParameterTemplate string `json:"parameter_template,omitempty"`
+	// Mode selects the topology: "standalone" (default; primary only) or "ha"
+	// (primary + 1 synchronous standby for no-data-loss failover).
+	Mode string `json:"mode,omitempty"`
+	// ReadReplicas is the number of asynchronous read-only standbys (0..plan cap).
+	// Layered on either mode; pointer so omitted (nil) means 0.
+	ReadReplicas *int `json:"read_replicas,omitempty"`
 }
 
 // UpdateRDSInstanceRequest is the body for PATCH /api/v1/rds/:id. Exactly one
@@ -70,6 +85,15 @@ type CreateRDSInstanceRequest struct {
 type UpdateRDSInstanceRequest struct {
 	Plan      string `json:"plan,omitempty"`
 	StorageGB *int   `json:"storage_gb,omitempty"`
+	// ParameterTemplate, when set, attaches a different parameter template and
+	// live-reconfigures the instance (KubeBlocks reload or rolling restart). A
+	// static-parameter change leaves PendingRestart=true until the restart lands.
+	ParameterTemplate string `json:"parameter_template,omitempty"`
+	// Mode and ReadReplicas live-scale the topology (KubeBlocks HorizontalScaling
+	// + sync-mode reconfigure). Supply at most one mutation dimension per call
+	// (plan, storage_gb, parameter_template, or mode/read_replicas).
+	Mode         string `json:"mode,omitempty"`
+	ReadReplicas *int   `json:"read_replicas,omitempty"`
 }
 
 // PublicRDSPlanResponse is the customer-facing plan (instance class) DTO
@@ -83,10 +107,87 @@ type PublicRDSPlanResponse struct {
 	Slug         string        `json:"slug"`
 	Engine       string        `json:"engine"`
 	Name         string        `json:"name"`
-	CPUvCPU      string        `json:"cpu_vcpu"`
-	MemoryMB     int           `json:"memory_mb"`
-	PriceHour    string        `json:"price_hour"`
-	Availability *Availability `json:"availability,omitempty"`
+	CPUvCPU  string `json:"cpu_vcpu"`
+	MemoryMB int    `json:"memory_mb"`
+	// MaxReadReplicas is the per-plan cap on asynchronous read replicas (bounded
+	// by a platform hard ceiling).
+	MaxReadReplicas int           `json:"max_read_replicas"`
+	PriceHour       string        `json:"price_hour"`
+	Availability    *Availability `json:"availability,omitempty"`
+}
+
+// PublicRDSEngineVersionResponse is a customer-facing entry of the engine
+// version catalogue returned by GET /api/v1/rds/engine-versions. Version is the
+// label the client passes as CreateRDSInstanceRequest.EngineVersion (e.g. "16");
+// the server maps it to the exact image internally. Status is
+// "supported" | "deprecated" | "eol" — only non-eol versions accept new
+// instances. Exactly one entry per engine has IsDefault=true.
+type PublicRDSEngineVersionResponse struct {
+	Engine    string `json:"engine"`
+	Version   string `json:"version"`
+	IsDefault bool   `json:"is_default"`
+	Status    string `json:"status"`
+}
+
+// RDSParameter is a single engine configuration key/value within a template.
+type RDSParameter struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// RDSPgParameterResponse describes an editable parameter from the engine
+// version's catalogue (allowlist) returned by
+// GET /api/v1/rds/engine-versions/:id/parameters. DataType is
+// int|real|bool|string|enum. ApplyMethod is "dynamic" (hot reload) or "static"
+// (needs a restart). Min/Max/EnumValues bound the allowed values.
+type RDSPgParameterResponse struct {
+	Name         string   `json:"name"`
+	DataType     string   `json:"data_type"`
+	ApplyMethod  string   `json:"apply_method"`
+	DefaultValue string   `json:"default_value,omitempty"`
+	MinValue     string   `json:"min_value,omitempty"`
+	MaxValue     string   `json:"max_value,omitempty"`
+	EnumValues   []string `json:"enum_values,omitempty"`
+	Unit         string   `json:"unit,omitempty"`
+	Description  string   `json:"description,omitempty"`
+}
+
+// PublicRDSParameterTemplateResponse is a parameter template (a reusable named
+// set of engine config, scoped to one engine version — like an AWS parameter
+// group / Huawei parameter template). IsSystem/IsDefault templates are
+// read-only; clone to customise.
+type PublicRDSParameterTemplateResponse struct {
+	ID            uint           `json:"id"`
+	Slug          string         `json:"slug"`
+	Name          string         `json:"name"`
+	Description   string         `json:"description,omitempty"`
+	Engine        string         `json:"engine"`
+	EngineVersion string         `json:"engine_version"`
+	IsSystem      bool           `json:"is_system"`
+	IsDefault     bool           `json:"is_default"`
+	Parameters    []RDSParameter `json:"parameters"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
+// CreateRDSParameterTemplateRequest is the body for
+// POST /api/v1/rds/parameter-templates. EngineVersion scopes the template; every
+// parameter must be in that version's editable allowlist.
+type CreateRDSParameterTemplateRequest struct {
+	Name          string         `json:"name"`
+	Description   string         `json:"description,omitempty"`
+	Engine        string         `json:"engine"`
+	EngineVersion string         `json:"engine_version"`
+	Parameters    []RDSParameter `json:"parameters,omitempty"`
+}
+
+// UpdateRDSParameterTemplateRequest is the body for
+// PATCH /api/v1/rds/parameter-templates/:id. Parameters replaces the full set.
+// Send If-Match with the template ETag to guard concurrent edits.
+type UpdateRDSParameterTemplateRequest struct {
+	Name        *string        `json:"name,omitempty"`
+	Description *string        `json:"description,omitempty"`
+	Parameters  []RDSParameter `json:"parameters,omitempty"`
 }
 
 // RDSInstanceResponse is the detail returned by GET /api/v1/rds/:id and the
@@ -100,13 +201,18 @@ type RDSInstanceResponse struct {
 	Name          string                   `json:"name"`
 	Engine        string                   `json:"engine"`
 	EngineVersion string                   `json:"engine_version"`
-	Mode          string                 `json:"mode"`
-	Replicas      int                    `json:"replicas"`
-	Plan          *PublicRDSPlanResponse `json:"plan,omitempty"`
-	StorageGB     int                    `json:"storage_gb"`
-	Status        string                   `json:"status"`
-	EndpointHost  string                   `json:"endpoint_host,omitempty"`
-	EndpointPort  int                      `json:"endpoint_port,omitempty"`
+	Mode     string `json:"mode"`
+	Replicas int    `json:"replicas"`
+	// ReadReplicas is the number of asynchronous read-only standbys.
+	ReadReplicas int                    `json:"read_replicas"`
+	Plan         *PublicRDSPlanResponse `json:"plan,omitempty"`
+	StorageGB    int                    `json:"storage_gb"`
+	Status       string                 `json:"status"`
+	EndpointHost string                 `json:"endpoint_host,omitempty"`
+	// ReadEndpointHost is the read-only Service host that load-balances across
+	// standbys; populated once at least one replica exists.
+	ReadEndpointHost string `json:"read_endpoint_host,omitempty"`
+	EndpointPort     int    `json:"endpoint_port,omitempty"`
 	StatusMessage string                   `json:"status_message,omitempty"`
 	// IsSuspended is true when the database was stopped for non-payment; the
 	// user must top up and POST /rds/:id/start to resume. SuspendReason explains
@@ -115,8 +221,15 @@ type RDSInstanceResponse struct {
 	IsSuspended   bool       `json:"is_suspended"`
 	SuspendReason string     `json:"suspend_reason,omitempty"`
 	SuspendedAt   *time.Time `json:"suspended_at,omitempty"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	// SSLEnabled reports whether the database enforces TLS on its connection.
+	SSLEnabled bool `json:"ssl_enabled"`
+	// ParameterTemplate is the attached configuration template, when set.
+	ParameterTemplate *PublicRDSParameterTemplateResponse `json:"parameter_template,omitempty"`
+	// PendingRestart is true when a static parameter change has been applied but
+	// the rolling restart that activates it has not completed yet.
+	PendingRestart bool      `json:"pending_restart,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // RDSMutationResponse is the 202 Accepted body for async POST/PATCH/DELETE on
@@ -146,10 +259,19 @@ type RDSOperationResponse struct {
 // Password is read live from the instance's credentials secret and is only
 // available once the instance is ready (otherwise 409 RDS_INSTANCE_NOT_READY).
 type RDSConnectionResponse struct {
-	Host     string `json:"host"`
+	Host string `json:"host"`
+	// ReadHost is the read-only endpoint (standbys); present when replicas exist.
+	// Use it for read-only / reporting traffic to offload the primary.
+	ReadHost string `json:"read_host,omitempty"`
 	Port     int    `json:"port"`
 	Username string `json:"username"`
 	Database string `json:"database"`
 	Password string `json:"password"`
-	SSLMode  string `json:"ssl_mode"`
+	// SSLMode is the libpq sslmode to use: "require" when the database enforces
+	// TLS (the connection is encrypted), "disable" when SSL is off.
+	SSLMode string `json:"ssl_mode"`
+	// CACert is the PEM-encoded CA bundle that signed the server certificate.
+	// Present only when SSL is enabled; supply it as sslrootcert to connect with
+	// sslmode=verify-full. Omitted when SSL is off (or momentarily unavailable).
+	CACert string `json:"ca_cert,omitempty"`
 }

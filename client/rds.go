@@ -37,6 +37,102 @@ func (s *RDSService) ListPlans(ctx context.Context, opts ...ListOption) ([]types
 	return out, nil
 }
 
+// ListEngineVersions returns the public engine-version catalogue — the PG
+// versions offered for new instances. The Version field of each entry is what
+// you pass as CreateRDSInstanceRequest.EngineVersion. Filter by engine with
+// WithExtraQuery("engine", "postgresql").
+func (s *RDSService) ListEngineVersions(ctx context.Context, opts ...ListOption) ([]types.PublicRDSEngineVersionResponse, error) {
+	q := resolveListOpts(opts)
+	var out []types.PublicRDSEngineVersionResponse
+	_, _, err := s.c.do(ctx, "GET", withQuery("/api/v1/rds/engine-versions", q), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ListEngineVersionParameters returns the editable parameter catalogue
+// (allowlist) for an engine version — what a parameter template may set.
+func (s *RDSService) ListEngineVersionParameters(ctx context.Context, engineVersionID uint, opts ...ListOption) ([]types.RDSPgParameterResponse, error) {
+	q := resolveListOpts(opts)
+	var out []types.RDSPgParameterResponse
+	_, _, err := s.c.do(ctx, "GET",
+		withQuery(fmt.Sprintf("/api/v1/rds/engine-versions/%d/parameters", engineVersionID), q), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ListParameterTemplates returns the caller's parameter templates plus the
+// read-only system templates.
+func (s *RDSService) ListParameterTemplates(ctx context.Context, opts ...ListOption) ([]types.PublicRDSParameterTemplateResponse, error) {
+	q := resolveListOpts(opts)
+	var out []types.PublicRDSParameterTemplateResponse
+	_, _, err := s.c.do(ctx, "GET", withQuery("/api/v1/rds/parameter-templates", q), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// GetParameterTemplate fetches one template by id.
+func (s *RDSService) GetParameterTemplate(ctx context.Context, id uint) (*types.PublicRDSParameterTemplateResponse, error) {
+	var out types.PublicRDSParameterTemplateResponse
+	_, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/rds/parameter-templates/%d", id), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// CreateParameterTemplate creates a custom parameter template.
+func (s *RDSService) CreateParameterTemplate(ctx context.Context, req *types.CreateRDSParameterTemplateRequest, opts ...WriteOption) (*types.PublicRDSParameterTemplateResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.PublicRDSParameterTemplateResponse
+	_, _, err = s.c.do(ctx, "POST", "/api/v1/rds/parameter-templates", req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// UpdateParameterTemplate edits a custom template. System/default templates are
+// read-only (409 RDS_PARAMETER_TEMPLATE_READ_ONLY). Pass WithIfMatch(etag) to
+// guard against concurrent edits.
+func (s *RDSService) UpdateParameterTemplate(ctx context.Context, id uint, req *types.UpdateRDSParameterTemplateRequest, opts ...WriteOption) (*types.PublicRDSParameterTemplateResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.PublicRDSParameterTemplateResponse
+	_, _, err = s.c.do(ctx, "PATCH", fmt.Sprintf("/api/v1/rds/parameter-templates/%d", id), req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// DeleteParameterTemplate removes a custom template. Fails with 409
+// RDS_PARAMETER_TEMPLATE_IN_USE if any instance still references it.
+func (s *RDSService) DeleteParameterTemplate(ctx context.Context, id uint, opts ...WriteOption) error {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return err
+	}
+	_, _, err = s.c.do(ctx, "DELETE", fmt.Sprintf("/api/v1/rds/parameter-templates/%d", id), nil, &wopts, nil)
+	return err
+}
+
+// SetParameterTemplate attaches a parameter template to a running instance and
+// live-reconfigures it. Async (202 + operation_id).
+func (s *RDSService) SetParameterTemplate(ctx context.Context, id uint, templateSlug string, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	return s.patch(ctx, id, &types.UpdateRDSInstanceRequest{ParameterTemplate: templateSlug}, opts...)
+}
+
 // List returns the user's database instances, paginated. Filter via
 // WithExtraQuery: "status", "engine".
 func (s *RDSService) List(ctx context.Context, opts ...ListOption) ([]types.RDSInstanceResponse, *types.Meta, error) {
@@ -117,6 +213,14 @@ func (s *RDSService) Create(ctx context.Context, req *types.CreateRDSInstanceReq
 // writes.
 func (s *RDSService) Scale(ctx context.Context, id uint, plan string, opts ...WriteOption) (*types.RDSMutationResponse, error) {
 	return s.patch(ctx, id, &types.UpdateRDSInstanceRequest{Plan: plan}, opts...)
+}
+
+// ScaleReplicas changes the topology mode and/or read-replica count on a running
+// instance (KubeBlocks HorizontalScaling + sync-mode reconfigure). Pass an empty
+// mode to leave it unchanged, or nil readReplicas to leave the count unchanged
+// (at least one must change). Async (202 + operation_id).
+func (s *RDSService) ScaleReplicas(ctx context.Context, id uint, mode string, readReplicas *int, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	return s.patch(ctx, id, &types.UpdateRDSInstanceRequest{Mode: mode, ReadReplicas: readReplicas}, opts...)
 }
 
 // Start resumes a suspended database (e.g. one stopped after a failed charge).
