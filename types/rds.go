@@ -260,11 +260,18 @@ type RDSOperationResponse struct {
 // available once the instance is ready (otherwise 409 RDS_INSTANCE_NOT_READY).
 type RDSConnectionResponse struct {
 	Host string `json:"host"`
-	// ReadHost is the read-only endpoint (standbys); present when replicas exist.
-	// Use it for read-only / reporting traffic to offload the primary.
+	// ReadHost is the load-balanced read-only endpoint (routes to any current
+	// standby); present when replicas exist. Use it for read-only / reporting
+	// traffic to offload the primary.
 	ReadHost string `json:"read_host,omitempty"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
+	// ReadReplicaHosts are the per-replica direct endpoints — one stable host per
+	// current standby (vs ReadHost which load-balances across them). Present when
+	// replicas exist. NOTE: these address individual nodes; on failover a node's
+	// role can change, so prefer ReadHost (or the primary Host) for role-stable
+	// routing. Empty for a single-node instance.
+	ReadReplicaHosts []string `json:"read_replica_hosts,omitempty"`
+	Port             int      `json:"port"`
+	Username         string   `json:"username"`
 	Database string `json:"database"`
 	Password string `json:"password"`
 	// SSLMode is the libpq sslmode to use: "require" when the database enforces

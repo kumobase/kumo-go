@@ -100,13 +100,15 @@ func TestRDSRoundTrip(t *testing.T) {
 		Status:      string(RDSOperationInProgress),
 	})
 	roundTrip(t, "RDSConnectionResponse", RDSConnectionResponse{
-		Host:     "my-pg.db.kumo.example",
-		Port:     5432,
-		Username: "kumo",
-		Database: "kumo",
-		Password: "s3cr3t",
-		SSLMode:  "require",
-		CACert:   "-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n",
+		Host:             "my-pg.db.kumo.example",
+		ReadHost:         "my-pg-ro.db.kumo.example",
+		ReadReplicaHosts: []string{"my-pg-0.db.kumo.example", "my-pg-2.db.kumo.example"},
+		Port:             5432,
+		Username:         "kumo",
+		Database:         "kumo",
+		Password:         "s3cr3t",
+		SSLMode:          "require",
+		CACert:           "-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n",
 	})
 	roundTrip(t, "RDSConnectionResponse+nossl", RDSConnectionResponse{
 		Host:     "my-pg.db.kumo.example",

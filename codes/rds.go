@@ -27,6 +27,12 @@ const (
 	// GET /api/v1/rds/engine-versions for the offered set.
 	RDSEngineVersionNotSupported = "RDS_ENGINE_VERSION_NOT_SUPPORTED"
 
+	// RDSEngineVersionUnavailable — an admin tried to register/update an engine
+	// version whose kb_service_version is not offered by the installed KubeBlocks
+	// PostgreSQL addon (ComponentVersion). Provisioning on it would hang, so the
+	// catalogue edit is rejected up-front. Pick a serviceVersion the addon ships.
+	RDSEngineVersionUnavailable = "RDS_ENGINE_VERSION_UNAVAILABLE"
+
 	// RDSActionInProgress — a lifecycle action (provision/scale/resize/delete)
 	// is already running on this instance; the new request was rejected. Poll
 	// the instance until status leaves its transient state, then retry.

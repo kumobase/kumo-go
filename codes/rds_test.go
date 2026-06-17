@@ -16,6 +16,7 @@ func TestRDSCodeValues(t *testing.T) {
 		{"RDSFlavorDisabled", RDSFlavorDisabled, "RDS_FLAVOR_DISABLED"},
 		{"RDSEngineNotSupported", RDSEngineNotSupported, "RDS_ENGINE_NOT_SUPPORTED"},
 		{"RDSEngineVersionNotSupported", RDSEngineVersionNotSupported, "RDS_ENGINE_VERSION_NOT_SUPPORTED"},
+		{"RDSEngineVersionUnavailable", RDSEngineVersionUnavailable, "RDS_ENGINE_VERSION_UNAVAILABLE"},
 		{"RDSActionInProgress", RDSActionInProgress, "RDS_ACTION_IN_PROGRESS"},
 		{"RDSInstanceNotReady", RDSInstanceNotReady, "RDS_INSTANCE_NOT_READY"},
 		{"RDSInstanceNotSuspended", RDSInstanceNotSuspended, "RDS_INSTANCE_NOT_SUSPENDED"},
