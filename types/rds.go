@@ -75,6 +75,21 @@ type CreateRDSInstanceRequest struct {
 	// ReadReplicas is the number of asynchronous read-only standbys (0..plan cap).
 	// Layered on either mode; pointer so omitted (nil) means 0.
 	ReadReplicas *int `json:"read_replicas,omitempty"`
+	// ReadReplicaSpecs optionally sizes each read replica independently of the
+	// primary (e.g. smaller, cheaper read replicas). When present, its length must
+	// equal ReadReplicas (or ReadReplicas may be omitted and inferred from the
+	// list); when omitted, all replicas use the primary's plan. A read replica's
+	// storage is always >= the primary's (a streaming standby holds a full copy).
+	ReadReplicaSpecs []ReadReplicaSpec `json:"read_replica_specs,omitempty"`
+}
+
+// ReadReplicaSpec requests one asynchronous read replica at a specific plan
+// (instance class), so read replicas can be sized independently of the primary.
+type ReadReplicaSpec struct {
+	// Plan is the catalogue slug for this replica's instance class (see
+	// PublicRDSPlanResponse.Slug). The replica is excluded from failover
+	// (Patroni nofailover), so an undersized replica can never become primary.
+	Plan string `json:"plan"`
 }
 
 // UpdateRDSInstanceRequest is the body for PATCH /api/v1/rds/:id. Exactly one
@@ -94,6 +109,11 @@ type UpdateRDSInstanceRequest struct {
 	// (plan, storage_gb, parameter_template, or mode/read_replicas).
 	Mode         string `json:"mode,omitempty"`
 	ReadReplicas *int   `json:"read_replicas,omitempty"`
+	// ReadReplicaSpecs sizes the read replicas independently of the primary; see
+	// CreateRDSInstanceRequest.ReadReplicaSpecs. When present, its length must
+	// equal ReadReplicas. Replacing a replica's plan is a delete+add of that
+	// replica node.
+	ReadReplicaSpecs []ReadReplicaSpec `json:"read_replica_specs,omitempty"`
 }
 
 // PublicRDSPlanResponse is the customer-facing plan (instance class) DTO
@@ -204,8 +224,12 @@ type RDSInstanceResponse struct {
 	Mode     string `json:"mode"`
 	Replicas int    `json:"replicas"`
 	// ReadReplicas is the number of asynchronous read-only standbys.
-	ReadReplicas int                    `json:"read_replicas"`
-	Plan         *PublicRDSPlanResponse `json:"plan,omitempty"`
+	ReadReplicas int `json:"read_replicas"`
+	// ReadReplicaDetails lists each read replica's resolved plan and state, so a
+	// client can see heterogeneous (independently-sized) replicas. Empty when
+	// there are no replicas or when all replicas share the primary's plan.
+	ReadReplicaDetails []ReadReplicaDetail    `json:"read_replica_details,omitempty"`
+	Plan               *PublicRDSPlanResponse `json:"plan,omitempty"`
 	StorageGB    int                    `json:"storage_gb"`
 	Status       string                 `json:"status"`
 	EndpointHost string                 `json:"endpoint_host,omitempty"`
@@ -230,6 +254,15 @@ type RDSInstanceResponse struct {
 	PendingRestart bool      `json:"pending_restart,omitempty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// ReadReplicaDetail is one read replica's resolved spec and lifecycle state
+// within RDSInstanceResponse. Ordinal is the stable index used to name the
+// replica node; Plan is its instance class (may differ from the primary's).
+type ReadReplicaDetail struct {
+	Ordinal int                    `json:"ordinal"`
+	Plan    *PublicRDSPlanResponse `json:"plan,omitempty"`
+	Status  string                 `json:"status"`
 }
 
 // RDSMutationResponse is the 202 Accepted body for async POST/PATCH/DELETE on

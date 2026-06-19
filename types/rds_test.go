@@ -73,6 +73,15 @@ func TestRDSRoundTrip(t *testing.T) {
 	roundTrip(t, "UpdateRDSInstanceRequest+replicas", UpdateRDSInstanceRequest{
 		Mode: string(RDSModeHA), ReadReplicas: &rr,
 	})
+	roundTrip(t, "CreateRDSInstanceRequest+replica-specs", CreateRDSInstanceRequest{
+		Name: "my-pg", Engine: RDSEnginePostgreSQL, EngineVersion: "16", Plan: "kumo.pg.medium",
+		StorageGB: 20, ReadReplicas: &rr,
+		ReadReplicaSpecs: []ReadReplicaSpec{{Plan: "kumo.pg.small"}, {Plan: "kumo.pg.small"}},
+	})
+	roundTrip(t, "UpdateRDSInstanceRequest+replica-specs", UpdateRDSInstanceRequest{
+		ReadReplicas:     &rr,
+		ReadReplicaSpecs: []ReadReplicaSpec{{Plan: "kumo.pg.small"}, {Plan: "kumo.pg.large"}},
+	})
 	roundTrip(t, "RDSInstanceResponse", RDSInstanceResponse{
 		ID:            7,
 		Name:          "my-pg",
@@ -88,6 +97,22 @@ func TestRDSRoundTrip(t *testing.T) {
 		IsSuspended:   true,
 		SuspendReason: "insufficient balance",
 		SSLEnabled:    true,
+	})
+	roundTrip(t, "RDSInstanceResponse+heterogeneous-replicas", RDSInstanceResponse{
+		ID:            8,
+		Name:          "my-pg-ha",
+		Engine:        RDSEnginePostgreSQL,
+		EngineVersion: "16",
+		Mode:          string(RDSModeHA),
+		Replicas:      4, // 1 primary + 1 sync standby + 2 read replicas
+		ReadReplicas:  2,
+		ReadReplicaDetails: []ReadReplicaDetail{
+			{Ordinal: 0, Plan: &PublicRDSPlanResponse{Slug: "kumo.pg.small", Engine: RDSEnginePostgreSQL, Name: "Small", PriceHour: "12.5000"}, Status: string(RDSStatusReady)},
+			{Ordinal: 1, Plan: &PublicRDSPlanResponse{Slug: "kumo.pg.large", Engine: RDSEnginePostgreSQL, Name: "Large", PriceHour: "50.0000"}, Status: string(RDSStatusReady)},
+		},
+		Plan:      &PublicRDSPlanResponse{Slug: "kumo.pg.medium", Engine: RDSEnginePostgreSQL, Name: "Medium", PriceHour: "25.0000"},
+		StorageGB: 20,
+		Status:    string(RDSStatusReady),
 	})
 	roundTrip(t, "RDSMutationResponse", RDSMutationResponse{
 		ID:          7,

@@ -122,4 +122,16 @@ const (
 
 	// RDSInvalidMode — the requested topology mode is not standalone|ha.
 	RDSInvalidMode = "RDS_INVALID_MODE"
+
+	// RDSReadReplicaSpecMismatch — read_replica_specs was supplied but is
+	// inconsistent with the request: its length does not match read_replicas, a
+	// replica plan slug is unknown, or a replica's resolved spec violates the
+	// replica-must-be->=-primary-storage rule.
+	RDSReadReplicaSpecMismatch = "RDS_READ_REPLICA_SPEC_MISMATCH"
+
+	// RDSModeChangeUnsupported — switching topology mode (standalone<->ha) on a
+	// live instance is not supported; HA must be selected at create time. Returned
+	// only when the platform cannot apply synchronous replication to a running
+	// cluster (see the RDS HA runbook).
+	RDSModeChangeUnsupported = "RDS_MODE_CHANGE_UNSUPPORTED"
 )
