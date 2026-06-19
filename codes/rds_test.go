@@ -37,6 +37,7 @@ func TestRDSCodeValues(t *testing.T) {
 		{"RDSParameterNotAllowed", RDSParameterNotAllowed, "RDS_PARAMETER_NOT_ALLOWED"},
 		{"RDSParameterInvalidValue", RDSParameterInvalidValue, "RDS_PARAMETER_INVALID_VALUE"},
 		{"RDSParameterTemplateVersionMismatch", RDSParameterTemplateVersionMismatch, "RDS_PARAMETER_TEMPLATE_VERSION_MISMATCH"},
+		{"RDSParameterTemplateDefaultProtected", RDSParameterTemplateDefaultProtected, "RDS_PARAMETER_TEMPLATE_DEFAULT_PROTECTED"},
 		{"RDSReadReplicaLimitExceeded", RDSReadReplicaLimitExceeded, "RDS_READ_REPLICA_LIMIT_EXCEEDED"},
 		{"RDSInvalidMode", RDSInvalidMode, "RDS_INVALID_MODE"},
 		{"RDSReadReplicaSpecMismatch", RDSReadReplicaSpecMismatch, "RDS_READ_REPLICA_SPEC_MISMATCH"},

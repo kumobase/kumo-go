@@ -114,6 +114,12 @@ const (
 	// an AWS parameter-group family).
 	RDSParameterTemplateVersionMismatch = "RDS_PARAMETER_TEMPLATE_VERSION_MISMATCH"
 
+	// RDSParameterTemplateDefaultProtected — the operation would delete or demote
+	// the engine version's only default template; every version must always keep a
+	// default. Promote another template to default first, or pick a new default in
+	// the same request.
+	RDSParameterTemplateDefaultProtected = "RDS_PARAMETER_TEMPLATE_DEFAULT_PROTECTED"
+
 	// ── Read replicas / HA ────────────────────────────────────────────────────
 
 	// RDSReadReplicaLimitExceeded — the requested read-replica count exceeds the
