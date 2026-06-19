@@ -26,6 +26,15 @@ const (
 	JobScheduleTooFrequent = "JOB_SCHEDULE_TOO_FREQUENT"
 	JobTimezoneInvalid    = "JOB_TIMEZONE_INVALID"
 	JobKindInvalid        = "JOB_KIND_INVALID"
+
+	// JobKindUnsupported is returned (400) when a create requests a job kind
+	// that is recognised but currently disabled for new jobs. Distinct from
+	// JobKindInvalid (an unrecognised/malformed kind) so clients can tell
+	// "this kind no longer accepts new jobs" from "this kind doesn't exist".
+	// app_attached is disabled for creation; existing app_attached jobs remain
+	// fully manageable.
+	JobKindUnsupported    = "JOB_KIND_UNSUPPORTED"
+
 	JobAppRequired        = "JOB_APP_REQUIRED"
 	JobAppNotFound        = "JOB_APP_NOT_FOUND"
 	JobImageRequired      = "JOB_IMAGE_REQUIRED"

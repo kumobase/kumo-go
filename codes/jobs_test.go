@@ -23,6 +23,7 @@ func TestJobsCodeValues(t *testing.T) {
 		{"JobScheduleTooFrequent", JobScheduleTooFrequent, "JOB_SCHEDULE_TOO_FREQUENT"},
 		{"JobTimezoneInvalid", JobTimezoneInvalid, "JOB_TIMEZONE_INVALID"},
 		{"JobKindInvalid", JobKindInvalid, "JOB_KIND_INVALID"},
+		{"JobKindUnsupported", JobKindUnsupported, "JOB_KIND_UNSUPPORTED"},
 		{"JobAppRequired", JobAppRequired, "JOB_APP_REQUIRED"},
 		{"JobAppNotFound", JobAppNotFound, "JOB_APP_NOT_FOUND"},
 		{"JobImageRequired", JobImageRequired, "JOB_IMAGE_REQUIRED"},
