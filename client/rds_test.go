@@ -32,6 +32,8 @@ func TestRDS_Smoke(t *testing.T) {
 			writeStruct(w, 200, "", "ok", &types.RDSInstanceResponse{ID: 7, Name: "my-pg", Engine: types.RDSEnginePostgreSQL, Status: string(types.RDSStatusReady)})
 		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/7/connection":
 			writeStruct(w, 200, "", "ok", &types.RDSConnectionResponse{Host: "h", Port: 5432, Username: "kumo", Database: "kumo", Password: "s", SSLMode: "require"})
+		case r.Method == "PATCH" && r.URL.Path == "/api/v1/rds/7/tls":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-6", Status: string(types.RDSStatusReconfiguring)})
 		case r.Method == "PATCH" && r.URL.Path == "/api/v1/rds/7":
 			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-2", Status: string(types.RDSStatusScaling)})
 		case r.Method == "DELETE" && r.URL.Path == "/api/v1/rds/7":
@@ -73,6 +75,10 @@ func TestRDS_Smoke(t *testing.T) {
 	switched, err := c.RDS().Switchover(ctx, 7)
 	if err != nil || switched.OperationID != "op-5" || switched.Status != string(types.RDSStatusSwitchingOver) {
 		t.Fatalf("Switchover: %v (%+v)", err, switched)
+	}
+	tlsd, err := c.RDS().UpdateTLS(ctx, 7, string(types.RDSTLSModeRequired))
+	if err != nil || tlsd.OperationID != "op-6" || tlsd.Status != string(types.RDSStatusReconfiguring) {
+		t.Fatalf("UpdateTLS: %v (%+v)", err, tlsd)
 	}
 	del, err := c.RDS().Delete(ctx, 7)
 	if err != nil || del.OperationID != "op-3" {

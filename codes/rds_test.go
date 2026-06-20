@@ -42,6 +42,12 @@ func TestRDSCodeValues(t *testing.T) {
 		{"RDSInvalidMode", RDSInvalidMode, "RDS_INVALID_MODE"},
 		{"RDSReadReplicaSpecMismatch", RDSReadReplicaSpecMismatch, "RDS_READ_REPLICA_SPEC_MISMATCH"},
 		{"RDSModeChangeUnsupported", RDSModeChangeUnsupported, "RDS_MODE_CHANGE_UNSUPPORTED"},
+		{"RDSSwitchoverDisabled", RDSSwitchoverDisabled, "RDS_SWITCHOVER_DISABLED"},
+		{"RDSSwitchoverNotHA", RDSSwitchoverNotHA, "RDS_SWITCHOVER_NOT_HA"},
+		{"RDSSwitchoverNotReady", RDSSwitchoverNotReady, "RDS_SWITCHOVER_NOT_READY"},
+		{"RDSInvalidTLSMode", RDSInvalidTLSMode, "RDS_INVALID_TLS_MODE"},
+		{"RDSTLSEnforcementDisabled", RDSTLSEnforcementDisabled, "RDS_TLS_ENFORCEMENT_DISABLED"},
+		{"RDSTLSModeChangeUnsupported", RDSTLSModeChangeUnsupported, "RDS_TLS_MODE_CHANGE_UNSUPPORTED"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {

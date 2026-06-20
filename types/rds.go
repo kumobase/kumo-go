@@ -13,6 +13,11 @@ const (
 	RDSStatusReady        RDSStatus = "ready"
 	RDSStatusScaling      RDSStatus = "scaling"
 	RDSStatusResizing     RDSStatus = "resizing"
+	// RDSStatusReconfiguring is the transient state while an engine-config change
+	// is applied — a parameter-template attach/edit or a tls_mode (TLS
+	// enforcement) change. The instance keeps serving; it returns to "ready" when
+	// the reconfigure settles.
+	RDSStatusReconfiguring RDSStatus = "reconfiguring"
 	// RDSStatusSwitchingOver is the transient state during a planned HA
 	// switchover (sync standby being promoted to primary). The instance stays
 	// fully serving; it returns to "ready" when the switch settles.
@@ -34,6 +39,27 @@ type RDSMode string
 const (
 	RDSModeStandalone RDSMode = "standalone"
 	RDSModeHA         RDSMode = "ha"
+)
+
+// RDSTLSMode controls TLS for client connections to the database:
+//
+//   - "disabled" — no server certificate; plaintext only.
+//   - "optional" — TLS is available (server cert issued) but the server still
+//     accepts plaintext; the client chooses via its libpq sslmode. This is the
+//     default and matches the historical "ssl on, not enforced" behaviour.
+//   - "required" — the server rejects non-TLS connections (plaintext refused),
+//     like AWS rds.force_ssl=1 / Alibaba "force SSL". Gated by a platform flag.
+//
+// Chosen at create. TLS availability (the certificate) is fixed at create, but
+// "optional" <-> "required" can be changed later via PATCH /rds/:id/tls — a
+// server-side pg_hba reload, no restart. A transition to/from "disabled" on a
+// live instance is not supported (it would mint/remove the cert and restart).
+type RDSTLSMode string
+
+const (
+	RDSTLSModeDisabled RDSTLSMode = "disabled"
+	RDSTLSModeOptional RDSTLSMode = "optional"
+	RDSTLSModeRequired RDSTLSMode = "required"
 )
 
 // RDS engine identifiers. PostgreSQL is the only engine at launch.
@@ -65,11 +91,12 @@ type CreateRDSInstanceRequest struct {
 	EngineVersion string `json:"engine_version"` // e.g. "16"
 	Plan          string `json:"plan"`           // plan slug, e.g. "kumo.pg.small"
 	StorageGB     int    `json:"storage_gb"`     // >= tier minimum
-	// SSLEnabled toggles TLS for the database connection. Pointer so the field
-	// is optional on the wire: omit (nil) to take the secure default (TLS on).
-	// When true, the connection is encrypted and GET .../connection returns a
-	// ca_cert clients can use for full verification. Set at create; immutable.
-	SSLEnabled *bool `json:"ssl_enabled,omitempty"`
+	// TLSMode controls TLS for client connections: "disabled" (plaintext only),
+	// "optional" (TLS available, client may still connect plaintext — the secure
+	// default), or "required" (server rejects non-TLS connections). Omit to take
+	// the default ("optional"). See RDSTLSMode. "required" is gated by a platform
+	// flag (400 RDS_TLS_ENFORCEMENT_DISABLED when off).
+	TLSMode string `json:"tls_mode,omitempty"`
 	// ParameterTemplate is the slug of a parameter template to attach (must match
 	// the instance's engine version). Omit to use the version's default template.
 	ParameterTemplate string `json:"parameter_template,omitempty"`
@@ -118,6 +145,17 @@ type UpdateRDSInstanceRequest struct {
 	// equal ReadReplicas. Replacing a replica's plan is a delete+add of that
 	// replica node.
 	ReadReplicaSpecs []ReadReplicaSpec `json:"read_replica_specs,omitempty"`
+}
+
+// UpdateRDSTLSRequest is the body for PATCH /api/v1/rds/:id/tls. It changes the
+// connection TLS enforcement of a running instance between "optional" and
+// "required" (a server-side pg_hba reload — no restart). Transitions to/from
+// "disabled" are rejected (409 RDS_TLS_MODE_CHANGE_UNSUPPORTED); requesting
+// "required" while the platform enforcement flag is off is rejected (400
+// RDS_TLS_ENFORCEMENT_DISABLED). Async (202 + operation_id). Send If-Match with
+// the instance ETag to guard against concurrent writes.
+type UpdateRDSTLSRequest struct {
+	TLSMode string `json:"tls_mode"`
 }
 
 // PublicRDSPlanResponse is the customer-facing plan (instance class) DTO
@@ -249,8 +287,10 @@ type RDSInstanceResponse struct {
 	IsSuspended   bool       `json:"is_suspended"`
 	SuspendReason string     `json:"suspend_reason,omitempty"`
 	SuspendedAt   *time.Time `json:"suspended_at,omitempty"`
-	// SSLEnabled reports whether the database enforces TLS on its connection.
-	SSLEnabled bool `json:"ssl_enabled"`
+	// TLSMode is the connection TLS policy: "disabled" | "optional" | "required".
+	// "required" means the server rejects non-TLS connections; "optional" means
+	// TLS is available but plaintext is still accepted. See RDSTLSMode.
+	TLSMode string `json:"tls_mode"`
 	// ParameterTemplate is the attached configuration template, when set.
 	ParameterTemplate *PublicRDSParameterTemplateResponse `json:"parameter_template,omitempty"`
 	// PendingRestart is true when a static parameter change has been applied but
@@ -311,11 +351,15 @@ type RDSConnectionResponse struct {
 	Username         string   `json:"username"`
 	Database string `json:"database"`
 	Password string `json:"password"`
-	// SSLMode is the libpq sslmode to use: "require" when the database enforces
-	// TLS (the connection is encrypted), "disable" when SSL is off.
+	// SSLMode is the recommended libpq sslmode for this instance's TLSMode:
+	// "require" when TLS is enforced (tls_mode=required), "prefer" when TLS is
+	// available but not enforced (tls_mode=optional), "disable" when there is no
+	// server cert (tls_mode=disabled). It is a client hint; the server only
+	// rejects plaintext when tls_mode=required.
 	SSLMode string `json:"ssl_mode"`
 	// CACert is the PEM-encoded CA bundle that signed the server certificate.
-	// Present only when SSL is enabled; supply it as sslrootcert to connect with
-	// sslmode=verify-full. Omitted when SSL is off (or momentarily unavailable).
+	// Present whenever a cert exists (tls_mode optional or required); supply it as
+	// sslrootcert to connect with sslmode=verify-full. Omitted when tls_mode is
+	// disabled (or the cert is momentarily unavailable).
 	CACert string `json:"ca_cert,omitempty"`
 }

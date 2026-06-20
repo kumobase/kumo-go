@@ -262,6 +262,25 @@ func (s *RDSService) Switchover(ctx context.Context, id uint, opts ...WriteOptio
 	return &out, nil
 }
 
+// UpdateTLS changes the connection TLS enforcement of a running instance between
+// "optional" and "required" (server-side pg_hba reload, no restart). Transitions
+// to/from "disabled" are rejected (409 RDS_TLS_MODE_CHANGE_UNSUPPORTED); asking
+// for "required" while the platform enforcement flag is off is rejected (400
+// RDS_TLS_ENFORCEMENT_DISABLED). Async (202 + operation_id). Pass WithIfMatch(etag)
+// to guard against concurrent writes.
+func (s *RDSService) UpdateTLS(ctx context.Context, id uint, mode string, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "PATCH", fmt.Sprintf("/api/v1/rds/%d/tls", id), &types.UpdateRDSTLSRequest{TLSMode: mode}, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Resize grows the data disk to sizeGB. Shrink is rejected. Async (202 +
 // operation_id).
 func (s *RDSService) Resize(ctx context.Context, id uint, sizeGB int, opts ...WriteOption) (*types.RDSMutationResponse, error) {

@@ -156,4 +156,20 @@ const (
 	// healthy synchronous standby to promote (the standby is down, not yet
 	// caught up, or otherwise ineligible). Retry once the standby is healthy.
 	RDSSwitchoverNotReady = "RDS_SWITCHOVER_NOT_READY"
+
+	// ── TLS mode / enforcement ────────────────────────────────────────────────
+
+	// RDSInvalidTLSMode — the requested tls_mode is not disabled|optional|required.
+	RDSInvalidTLSMode = "RDS_INVALID_TLS_MODE"
+
+	// RDSTLSEnforcementDisabled — tls_mode "required" was requested but the
+	// platform RDS_TLS_ENFORCE_ENABLED flag is off (server-side TLS enforcement is
+	// not offered yet). Use "optional", or ask the operator to enable enforcement.
+	RDSTLSEnforcementDisabled = "RDS_TLS_ENFORCEMENT_DISABLED"
+
+	// RDSTLSModeChangeUnsupported — a day-2 tls_mode change to or from "disabled"
+	// was requested. Only "optional" <-> "required" is changeable on a live
+	// instance (a pg_hba reload); changing TLS availability (the cert) requires
+	// recreating the instance.
+	RDSTLSModeChangeUnsupported = "RDS_TLS_MODE_CHANGE_UNSUPPORTED"
 )

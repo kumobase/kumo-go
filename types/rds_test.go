@@ -10,14 +10,16 @@ func TestRDSRoundTrip(t *testing.T) {
 		Plan:          "kumo.pg.small",
 		StorageGB:     20,
 	})
-	sslOn := true
-	roundTrip(t, "CreateRDSInstanceRequest+ssl", CreateRDSInstanceRequest{
+	roundTrip(t, "CreateRDSInstanceRequest+tls", CreateRDSInstanceRequest{
 		Name:          "my-pg",
 		Engine:        RDSEnginePostgreSQL,
 		EngineVersion: "16",
 		Plan:          "kumo.pg.small",
 		StorageGB:     20,
-		SSLEnabled:    &sslOn,
+		TLSMode:       string(RDSTLSModeRequired),
+	})
+	roundTrip(t, "UpdateRDSTLSRequest", UpdateRDSTLSRequest{
+		TLSMode: string(RDSTLSModeOptional),
 	})
 	sz := 50
 	roundTrip(t, "UpdateRDSInstanceRequest+storage", UpdateRDSInstanceRequest{
@@ -96,7 +98,7 @@ func TestRDSRoundTrip(t *testing.T) {
 		EndpointPort:  5432,
 		IsSuspended:   true,
 		SuspendReason: "insufficient balance",
-		SSLEnabled:    true,
+		TLSMode:       string(RDSTLSModeRequired),
 	})
 	roundTrip(t, "RDSInstanceResponse+heterogeneous-replicas", RDSInstanceResponse{
 		ID:            8,
