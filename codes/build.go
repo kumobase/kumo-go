@@ -58,4 +58,19 @@ const (
 	// requested for a build that has no persisted log (e.g. still
 	// pending/running, never started, or the log upload failed).
 	BuildLogNotAvailable = "BUILD_LOG_NOT_AVAILABLE"
+
+	// BuildInvalidDockerfilePath — the supplied dockerfile_path is not a clean
+	// relative path (it is absolute, or contains ".." traversal). Returned 400
+	// at create/update time, before any build runs.
+	BuildInvalidDockerfilePath = "BUILD_INVALID_DOCKERFILE_PATH"
+
+	// BuildNoDockerfile — a "dockerfile" build ran but no file exists at the
+	// configured dockerfile_path in the cloned repo. Surfaced as a failed build
+	// (not a create-time error), since the path is only known at build time.
+	BuildNoDockerfile = "BUILD_NO_DOCKERFILE"
+
+	// BuildNoRailpackPlan — an "auto"/"railpack" build ran but Railpack could not
+	// detect a buildable project (no Dockerfile and no recognized language).
+	// Surfaced as a failed build (the repo is only inspected at build time).
+	BuildNoRailpackPlan = "BUILD_NO_RAILPACK_PLAN"
 )

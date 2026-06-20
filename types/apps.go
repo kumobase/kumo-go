@@ -293,9 +293,11 @@ type AppByIdResponse struct {
 	// Image field is system-owned and cannot be changed via PATCH.
 	Source AppSource `json:"source"`
 
-	// Language is the build language preset for git-build apps ("auto" or a
-	// specific language: nodejs/python/go/java/ruby/php/dotnet, or "static").
-	// Empty/omitted for registry-image apps.
+	// Language is the build language preset for git-build apps: "auto"
+	// (Dockerfile-if-present-else-Railpack), "railpack", "cnb" (Cloud Native
+	// Buildpacks auto-detect), a specific language (nodejs/python/go/java/ruby/
+	// php/dotnet, a buildpack pin), "static" (nginx), or "dockerfile". Empty/
+	// omitted for registry-image apps.
 	Language string `json:"language,omitempty"`
 
 	// OutputDir and BuildCommand are the static-site preset config for git-build
@@ -303,6 +305,10 @@ type AppByIdResponse struct {
 	// script run before serving. Empty/omitted for non-static and registry-image apps.
 	OutputDir    string `json:"output_dir,omitempty"`
 	BuildCommand string `json:"build_command,omitempty"`
+
+	// DockerfilePath is the repo-relative Dockerfile path for git-build apps with
+	// Language == "dockerfile". Empty/omitted otherwise.
+	DockerfilePath string `json:"dockerfile_path,omitempty"`
 
 	// Suspension state
 	IsSuspended   bool   `json:"is_suspended"`

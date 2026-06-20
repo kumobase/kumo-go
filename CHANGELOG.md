@@ -6,6 +6,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.26.0]
+
+### Added
+- `types/build.go` — `DockerfilePath` on `CreateGitBuildAppRequest` and
+  `UpdateBuildConfigRequest` (the "dockerfile" build preset). New discovery
+  types `BuildersResponse`, `BuilderOption`, `LanguageOption`.
+- `types/apps.go` — `DockerfilePath` on `AppByIdResponse` (read-back of the
+  configured Dockerfile path).
+- `client/build.go` — `Builds().ListBuilders()` for `GET /api/v1/builders`
+  (the selectable builder kinds + CNB language presets; lets clients stop
+  hardcoding the list).
+- `codes/build.go` — `BUILD_INVALID_DOCKERFILE_PATH`, `BUILD_NO_DOCKERFILE`
+  (the "dockerfile" preset), and `BUILD_NO_RAILPACK_PLAN` (the "auto"/"railpack"
+  preset when Railpack can't detect a buildable project).
+
+### Changed
+- `Language` now also accepts `"auto"` (Dockerfile-if-present-else-Railpack, the
+  new zero-config default), `"railpack"`, `"dockerfile"`, and `"cnb"` (the
+  legacy buildpack auto-detect). Doc comments updated; no wire-string changes to
+  existing values.
+
 ## [v0.24.0]
 
 ### Added

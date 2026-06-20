@@ -90,11 +90,19 @@ type CreateGitBuildAppRequest struct {
 	Branch       string `json:"branch,omitempty"`
 	TagPattern   string `json:"tag_pattern,omitempty"` // glob, e.g. "v*", "release/*"
 
-	// Language is the build language preset. Empty or "auto" (default) lets the
-	// platform auto-detect the language; a specific value (e.g. "nodejs",
-	// "python", "go") pins the build to that language's buildpack. The special
-	// value "static" builds a static site served by nginx (see OutputDir /
-	// BuildCommand below).
+	// Language is the build language preset:
+	//   - "" / "auto" (default): build the repo's Dockerfile if one is present,
+	//     otherwise build with Railpack (zero-config detection of Node/Bun/Deno/
+	//     Python/Go/PHP/etc.). The platform-wide engine for "auto" is operator-
+	//     configurable.
+	//   - "railpack": always build with Railpack (ignore any Dockerfile).
+	//   - "dockerfile": build the repo's Dockerfile directly (see DockerfilePath).
+	//   - "cnb": Cloud Native Buildpacks auto-detection (the legacy default).
+	//   - a specific language (nodejs/python/go/java/ruby/php/dotnet): pin that
+	//     language's buildpack (CNB).
+	//   - "static": a static site served by nginx (see OutputDir / BuildCommand).
+	// Use "dockerfile"/"railpack" for full control or runtimes buildpacks don't
+	// support (Bun, Deno).
 	Language string `json:"language,omitempty"`
 
 	// OutputDir and BuildCommand apply only to the "static" preset and are
@@ -105,6 +113,15 @@ type CreateGitBuildAppRequest struct {
 	// A static app is always served on port 8080 (the port field is forced).
 	OutputDir    string `json:"output_dir,omitempty"`
 	BuildCommand string `json:"build_command,omitempty"`
+
+	// DockerfilePath applies only to the "dockerfile" preset and is otherwise
+	// ignored. It is the repo-relative path to the Dockerfile to build (default
+	// "Dockerfile"; e.g. "docker/prod.Dockerfile"). Must be a clean relative
+	// path — absolute paths and ".." traversal are rejected (400
+	// BUILD_INVALID_DOCKERFILE_PATH). If no file exists at the path the build
+	// fails (BUILD_NO_DOCKERFILE). The image must listen on $PORT, which the
+	// platform injects equal to the app's port.
+	DockerfilePath string `json:"dockerfile_path,omitempty"`
 
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 	PricingSlug          string                `json:"pricing_slug"`
@@ -130,9 +147,10 @@ type CreateGitBuildAppRequest struct {
 // re-enables manual rebuild. Supports optional If-Match for optimistic
 // concurrency.
 type UpdateBuildConfigRequest struct {
-	Language     string  `json:"language,omitempty"`      // "auto" (default) | a language | "static"
-	OutputDir    string  `json:"output_dir,omitempty"`    // static only → BP_WEB_SERVER_ROOT
-	BuildCommand string  `json:"build_command,omitempty"` // static only → BP_NODE_RUN_SCRIPTS (npm script)
+	Language       string `json:"language,omitempty"`        // "auto" (default) | a language | "static" | "dockerfile"
+	OutputDir      string `json:"output_dir,omitempty"`      // static only → BP_WEB_SERVER_ROOT
+	BuildCommand   string `json:"build_command,omitempty"`   // static only → BP_NODE_RUN_SCRIPTS (npm script)
+	DockerfilePath string `json:"dockerfile_path,omitempty"` // dockerfile only → repo-relative path (default "Dockerfile")
 	// Branch is exact-match (not a glob). nil = no change, "" = clear the
 	// branch trigger, non-empty = set. Cross-field (at-least-one trigger)
 	// checked server-side.
@@ -147,4 +165,29 @@ type UpdateBuildConfigRequest struct {
 // build has no persisted log (still pending/running, or the upload failed).
 type BuildLogURLResponse struct {
 	LogURL string `json:"log_url"`
+}
+
+// BuilderOption is one selectable build engine for a git-build app, as returned
+// by GET /api/v1/builders. Kind is the value to send as CreateGitBuildAppRequest
+// .Language (for engine-level kinds: auto/railpack/dockerfile/static/cnb). Label
+// is a human-friendly name for a UI. Default marks the platform's current
+// zero-config default (what "auto" resolves to).
+type BuilderOption struct {
+	Kind    string `json:"kind"`
+	Label   string `json:"label"`
+	Default bool   `json:"default,omitempty"`
+}
+
+// LanguageOption is one buildpack language preset (CNB) selectable as
+// CreateGitBuildAppRequest.Language.
+type LanguageOption struct {
+	Value string `json:"value"`
+}
+
+// BuildersResponse is the body of GET /api/v1/builders. It is static platform
+// metadata (no per-user data) describing the builder kinds and CNB language
+// presets a git-build app may select, so clients need not hardcode the list.
+type BuildersResponse struct {
+	Builders  []BuilderOption  `json:"builders"`
+	Languages []LanguageOption `json:"languages"`
 }

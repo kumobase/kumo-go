@@ -22,6 +22,19 @@ type BuildsService struct {
 // Builds returns the builds service.
 func (c *Client) Builds() *BuildsService { return &BuildsService{c: c} }
 
+// ListBuilders returns the platform's selectable builder kinds (auto, railpack,
+// dockerfile, static, cnb) and CNB language presets, with the current zero-config
+// default flagged. Static metadata — safe to cache briefly. Use it to populate a
+// build-config UI instead of hardcoding the list.
+func (s *BuildsService) ListBuilders(ctx context.Context) (*types.BuildersResponse, error) {
+	var out types.BuildersResponse
+	_, _, err := s.c.do(ctx, "GET", "/api/v1/builders", nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // CreateGitBuildApp creates a git-build app bound to the given source
 // connection and triggers its initial build (the branch HEAD). The returned
 // CreateAppResponse carries the new app's id; the app deploys automatically
