@@ -240,6 +240,28 @@ func (s *RDSService) Start(ctx context.Context, id uint, opts ...WriteOption) (*
 	return &out, nil
 }
 
+// Switchover triggers a planned, operator-initiated HA role swap: the
+// synchronous standby is promoted to primary and the old primary demoted while
+// both are healthy — a graceful counterpart to automatic failover, for node
+// maintenance, AZ drains, or rebalancing. Only valid on HA instances (409
+// RDS_SWITCHOVER_NOT_HA on standalone), gated behind the platform
+// RDS_SWITCHOVER_ENABLED flag (409 RDS_SWITCHOVER_DISABLED when off), and
+// rejected with 409 RDS_SWITCHOVER_NOT_READY when no healthy sync standby
+// exists. Async read replicas are never promotion candidates. Async (202 +
+// operation_id). Pass WithIfMatch(etag) to guard against concurrent writes.
+func (s *RDSService) Switchover(ctx context.Context, id uint, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "POST", fmt.Sprintf("/api/v1/rds/%d/switchover", id), nil, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Resize grows the data disk to sizeGB. Shrink is rejected. Async (202 +
 // operation_id).
 func (s *RDSService) Resize(ctx context.Context, id uint, sizeGB int, opts ...WriteOption) (*types.RDSMutationResponse, error) {

@@ -26,6 +26,8 @@ func TestRDS_Smoke(t *testing.T) {
 			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-1", Status: string(types.RDSStatusProvisioning)})
 		case r.Method == "POST" && r.URL.Path == "/api/v1/rds/7/start":
 			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-4", Status: string(types.RDSStatusProvisioning)})
+		case r.Method == "POST" && r.URL.Path == "/api/v1/rds/7/switchover":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-5", Status: string(types.RDSStatusSwitchingOver)})
 		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/7":
 			writeStruct(w, 200, "", "ok", &types.RDSInstanceResponse{ID: 7, Name: "my-pg", Engine: types.RDSEnginePostgreSQL, Status: string(types.RDSStatusReady)})
 		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/7/connection":
@@ -67,6 +69,10 @@ func TestRDS_Smoke(t *testing.T) {
 	started, err := c.RDS().Start(ctx, 7)
 	if err != nil || started.OperationID != "op-4" {
 		t.Fatalf("Start: %v (%+v)", err, started)
+	}
+	switched, err := c.RDS().Switchover(ctx, 7)
+	if err != nil || switched.OperationID != "op-5" || switched.Status != string(types.RDSStatusSwitchingOver) {
+		t.Fatalf("Switchover: %v (%+v)", err, switched)
 	}
 	del, err := c.RDS().Delete(ctx, 7)
 	if err != nil || del.OperationID != "op-3" {

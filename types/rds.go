@@ -13,9 +13,13 @@ const (
 	RDSStatusReady        RDSStatus = "ready"
 	RDSStatusScaling      RDSStatus = "scaling"
 	RDSStatusResizing     RDSStatus = "resizing"
-	RDSStatusSuspended    RDSStatus = "suspended"
-	RDSStatusFailed       RDSStatus = "failed"
-	RDSStatusDeleting     RDSStatus = "deleting"
+	// RDSStatusSwitchingOver is the transient state during a planned HA
+	// switchover (sync standby being promoted to primary). The instance stays
+	// fully serving; it returns to "ready" when the switch settles.
+	RDSStatusSwitchingOver RDSStatus = "switching_over"
+	RDSStatusSuspended     RDSStatus = "suspended"
+	RDSStatusFailed        RDSStatus = "failed"
+	RDSStatusDeleting      RDSStatus = "deleting"
 	// RDSStatusDeleted is filtered server-side from list/get responses; included
 	// for completeness of the wire enum.
 	RDSStatusDeleted RDSStatus = "deleted"

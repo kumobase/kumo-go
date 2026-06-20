@@ -140,4 +140,20 @@ const (
 	// only when the platform cannot apply synchronous replication to a running
 	// cluster (see the RDS HA runbook).
 	RDSModeChangeUnsupported = "RDS_MODE_CHANGE_UNSUPPORTED"
+
+	// ── Manual switchover (planned HA role swap) ──────────────────────────────
+
+	// RDSSwitchoverDisabled — a manual switchover was requested but the platform
+	// RDS_SWITCHOVER_ENABLED flag is off. Planned switchover is not offered yet.
+	RDSSwitchoverDisabled = "RDS_SWITCHOVER_DISABLED"
+
+	// RDSSwitchoverNotHA — a manual switchover was requested on a standalone
+	// instance. Switchover promotes the synchronous standby, so it requires HA
+	// mode (primary + sync standby). Async read replicas are never candidates.
+	RDSSwitchoverNotHA = "RDS_SWITCHOVER_NOT_HA"
+
+	// RDSSwitchoverNotReady — a manual switchover was requested but there is no
+	// healthy synchronous standby to promote (the standby is down, not yet
+	// caught up, or otherwise ineligible). Retry once the standby is healthy.
+	RDSSwitchoverNotReady = "RDS_SWITCHOVER_NOT_READY"
 )
