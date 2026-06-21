@@ -145,4 +145,23 @@ func TestRDSRoundTrip(t *testing.T) {
 		Password: "s3cr3t",
 		SSLMode:  "disable",
 	})
+	// ── Backups ──────────────────────────────────────────────────────────────
+	roundTrip(t, "CreateRDSBackupRequest", CreateRDSBackupRequest{RetentionDays: 7})
+	roundTrip(t, "RDSBackupResponse", RDSBackupResponse{
+		ID: 3, RDSInstanceID: 7, Method: string(RDSBackupMethodFull),
+		Status: string(RDSBackupStatusCompleted), SizeBytes: 1048576,
+		TierSlug: "s3-standard", RetentionDays: 7,
+	})
+	roundTrip(t, "UpdateRDSBackupConfigRequest", UpdateRDSBackupConfigRequest{
+		Enabled: true, ScheduleCron: "0 2 * * *", RetentionDays: 7, TierSlug: "s3-standard", PITREnabled: true,
+	})
+	roundTrip(t, "RDSBackupConfigResponse", RDSBackupConfigResponse{
+		Enabled: true, ScheduleCron: "0 2 * * *", RetentionDays: 7, TierSlug: "s3-standard", PITREnabled: true,
+	})
+	roundTrip(t, "RestoreRDSBackupRequest", RestoreRDSBackupRequest{
+		BackupID: 3, Name: "restored-pg", Plan: "kumo.pg.small", StorageGB: 20,
+	})
+	roundTrip(t, "RestoreRDSBackupRequest+pitr", RestoreRDSBackupRequest{
+		BackupID: 3, Name: "restored-pg", StorageGB: 20, RestoreToTime: "2026-06-21T05:43:33Z",
+	})
 }

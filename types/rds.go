@@ -166,9 +166,9 @@ type UpdateRDSTLSRequest struct {
 // CPUvCPU and PriceHour are decimal strings (e.g. "1", "0.5", "12.5000") —
 // parse with a decimal library if you need arithmetic.
 type PublicRDSPlanResponse struct {
-	Slug         string        `json:"slug"`
-	Engine       string        `json:"engine"`
-	Name         string        `json:"name"`
+	Slug     string `json:"slug"`
+	Engine   string `json:"engine"`
+	Name     string `json:"name"`
 	CPUvCPU  string `json:"cpu_vcpu"`
 	MemoryMB int    `json:"memory_mb"`
 	// MaxReadReplicas is the per-plan cap on asynchronous read replicas (bounded
@@ -259,12 +259,12 @@ type UpdateRDSParameterTemplateRequest struct {
 // Endpoint{Host,Port} are populated once the instance is ready. Credentials are
 // not included here — fetch them via GET /api/v1/rds/:id/connection.
 type RDSInstanceResponse struct {
-	ID            uint                     `json:"id"`
-	Name          string                   `json:"name"`
-	Engine        string                   `json:"engine"`
-	EngineVersion string                   `json:"engine_version"`
-	Mode     string `json:"mode"`
-	Replicas int    `json:"replicas"`
+	ID            uint   `json:"id"`
+	Name          string `json:"name"`
+	Engine        string `json:"engine"`
+	EngineVersion string `json:"engine_version"`
+	Mode          string `json:"mode"`
+	Replicas      int    `json:"replicas"`
 	// ReadReplicas is the number of asynchronous read-only standbys.
 	ReadReplicas int `json:"read_replicas"`
 	// ReadReplicaDetails lists each read replica's resolved plan and state, so a
@@ -272,14 +272,14 @@ type RDSInstanceResponse struct {
 	// there are no replicas or when all replicas share the primary's plan.
 	ReadReplicaDetails []ReadReplicaDetail    `json:"read_replica_details,omitempty"`
 	Plan               *PublicRDSPlanResponse `json:"plan,omitempty"`
-	StorageGB    int                    `json:"storage_gb"`
-	Status       string                 `json:"status"`
-	EndpointHost string                 `json:"endpoint_host,omitempty"`
+	StorageGB          int                    `json:"storage_gb"`
+	Status             string                 `json:"status"`
+	EndpointHost       string                 `json:"endpoint_host,omitempty"`
 	// ReadEndpointHost is the read-only Service host that load-balances across
 	// standbys; populated once at least one replica exists.
 	ReadEndpointHost string `json:"read_endpoint_host,omitempty"`
 	EndpointPort     int    `json:"endpoint_port,omitempty"`
-	StatusMessage string                   `json:"status_message,omitempty"`
+	StatusMessage    string `json:"status_message,omitempty"`
 	// IsSuspended is true when the database was stopped for non-payment; the
 	// user must top up and POST /rds/:id/start to resume. SuspendReason explains
 	// why ("insufficient balance"); SuspendedAt is when the retention window
@@ -322,14 +322,136 @@ type RDSMutationResponse struct {
 // GET /api/v1/rds/:id/operations/:operation_id. Status is one of the
 // RDSOperation* constants; ErrorCode/ErrorMessage are set on terminal failure.
 type RDSOperationResponse struct {
-	OperationID string     `json:"operation_id"`
-	ActionType  string     `json:"action_type"` // create | scale | resize | delete
-	Status      string     `json:"status"`
-	ErrorCode   string     `json:"error_code,omitempty"`
-	ErrorMessage string    `json:"error_message,omitempty"`
-	QueuedAt    time.Time  `json:"queued_at"`
-	StartedAt   *time.Time `json:"started_at,omitempty"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	OperationID  string     `json:"operation_id"`
+	ActionType   string     `json:"action_type"` // create | scale | resize | delete
+	Status       string     `json:"status"`
+	ErrorCode    string     `json:"error_code,omitempty"`
+	ErrorMessage string     `json:"error_message,omitempty"`
+	QueuedAt     time.Time  `json:"queued_at"`
+	StartedAt    *time.Time `json:"started_at,omitempty"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"`
+}
+
+// ── Backups (to object storage) ──────────────────────────────────────
+
+// RDSBackupStatus enumerates the lifecycle states of a database backup stored
+// in object storage. Transient states (pending, running) resolve asynchronously
+// — clients poll GET /api/v1/rds/:id/backups/:bid until Status settles on
+// completed / failed. expired and deleting are terminal cleanup states.
+type RDSBackupStatus string
+
+const (
+	RDSBackupStatusPending   RDSBackupStatus = "pending"
+	RDSBackupStatusRunning   RDSBackupStatus = "running"
+	RDSBackupStatusCompleted RDSBackupStatus = "completed"
+	RDSBackupStatusFailed    RDSBackupStatus = "failed"
+	RDSBackupStatusDeleting  RDSBackupStatus = "deleting"
+	RDSBackupStatusExpired   RDSBackupStatus = "expired"
+)
+
+// RDSBackupMethod is how a backup was taken. "full" is a complete base backup
+// (pg_basebackup); "continuous" is WAL archiving for point-in-time recovery
+// (PITR). Only "full" is offered at launch.
+type RDSBackupMethod string
+
+const (
+	RDSBackupMethodFull       RDSBackupMethod = "full"
+	RDSBackupMethodContinuous RDSBackupMethod = "continuous"
+)
+
+// CreateRDSBackupRequest is the body for POST /api/v1/rds/:id/backups — an
+// on-demand backup of the instance to object storage. Honors Idempotency-Key
+// (retrying the same key returns the same backup rather than starting a second).
+// Async (202 + operation_id); poll the backup until Status="completed".
+type CreateRDSBackupRequest struct {
+	// RetentionDays optionally overrides the backup tier's default retention for
+	// this one backup (bounded by the tier's min/max). 0 / omitted uses the tier
+	// default. After this many days the backup is automatically deleted from
+	// object storage and billing for it stops.
+	RetentionDays int `json:"retention_days,omitempty"`
+}
+
+// RDSBackupResponse is the detail returned by GET /api/v1/rds/:id/backups/:bid
+// and the items of GET /api/v1/rds/:id/backups. The server sets ETag from
+// UpdatedAt. SizeBytes is the measured size in object storage (0 until the
+// backup completes).
+type RDSBackupResponse struct {
+	ID            uint `json:"id"`
+	RDSInstanceID uint `json:"rds_instance_id"`
+	// SourceInstanceName / SourceEngineVersion describe the database the backup
+	// was taken from — retained for the global backups view even after that
+	// database is deleted (the backup itself survives and stays restorable).
+	SourceInstanceName  string `json:"source_instance_name,omitempty"`
+	SourceEngineVersion string `json:"source_engine_version,omitempty"`
+	Method              string `json:"method"` // full | continuous
+	Status              string `json:"status"`
+	SizeBytes           int64  `json:"size_bytes"`
+	// TierSlug is the backup tier this backup is billed on (price + storage
+	// destination). RetentionDays / ExpiresAt describe its automatic cleanup.
+	TierSlug      string     `json:"tier_slug,omitempty"`
+	RetentionDays int        `json:"retention_days"`
+	ExpiresAt     *time.Time `json:"expires_at,omitempty"`
+	ErrorMessage  string     `json:"error_message,omitempty"`
+	StartedAt     *time.Time `json:"started_at,omitempty"`
+	CompletedAt   *time.Time `json:"completed_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+// UpdateRDSBackupConfigRequest is the body for PUT /api/v1/rds/:id/backup-config.
+// It enables/disables automatic scheduled backups for an instance and sets the
+// schedule, retention, and backup tier. When Enabled is false the schedule is
+// removed (existing backups are retained until their own expiry).
+type UpdateRDSBackupConfigRequest struct {
+	Enabled bool `json:"enabled"`
+	// ScheduleCron is a standard 5-field cron expression for automatic full
+	// backups (e.g. "0 2 * * *" = daily 02:00 UTC). Required when Enabled.
+	ScheduleCron string `json:"schedule_cron,omitempty"`
+	// RetentionDays is how long scheduled backups are kept (bounded by the tier).
+	RetentionDays int `json:"retention_days,omitempty"`
+	// TierSlug selects the backup tier (price + object-storage destination). Omit
+	// to use the platform default tier.
+	TierSlug string `json:"tier_slug,omitempty"`
+	// PITREnabled turns on continuous WAL archiving (point-in-time recovery). With
+	// it on, the database can be restored to any second within the retention
+	// window (not just to a discrete full backup) — see Restore.RestoreToTime.
+	// Requires Enabled (scheduled full backups provide the base for WAL replay).
+	// The archived WAL is billed on the same backup tier as full backups.
+	PITREnabled bool `json:"pitr_enabled,omitempty"`
+}
+
+// RDSBackupConfigResponse is the current automatic-backup configuration of an
+// instance, returned by PUT /api/v1/rds/:id/backup-config.
+type RDSBackupConfigResponse struct {
+	Enabled       bool   `json:"enabled"`
+	ScheduleCron  string `json:"schedule_cron,omitempty"`
+	RetentionDays int    `json:"retention_days"`
+	TierSlug      string `json:"tier_slug,omitempty"`
+	PITREnabled   bool   `json:"pitr_enabled"`
+}
+
+// RestoreRDSBackupRequest is the body for POST /api/v1/rds/:id/restore. It
+// provisions a NEW database instance from a completed backup (the source
+// instance is untouched). The new instance is billed independently. Async
+// (202 + operation_id on the new instance); poll the new instance until ready.
+type RestoreRDSBackupRequest struct {
+	// BackupID is the completed backup to restore from (must belong to the source
+	// instance referenced in the path).
+	BackupID uint `json:"backup_id"`
+	// Name is the new instance's name (1..40 chars, RFC-1035 label).
+	Name string `json:"name"`
+	// Plan is the new instance's compute plan slug. Omit to inherit the source's.
+	Plan string `json:"plan,omitempty"`
+	// StorageGB is the new instance's data-disk size; must be >= the source
+	// backup's storage (400 RDS_RESTORE_STORAGE_TOO_SMALL otherwise). Omit to
+	// inherit the source's size.
+	StorageGB int `json:"storage_gb,omitempty"`
+	// RestoreToTime, when set (RFC-3339, e.g. "2026-06-21T05:43:33Z"), performs a
+	// point-in-time recovery: the new instance is restored to the database state
+	// as of that instant by replaying archived WAL. Requires the source to have
+	// had PITR (continuous WAL archiving) enabled, and the time must fall within
+	// the available WAL window. When empty, restores to the backup's own point.
+	RestoreToTime string `json:"restore_to_time,omitempty"`
 }
 
 // RDSConnectionResponse is returned by GET /api/v1/rds/:id/connection. The
@@ -349,8 +471,8 @@ type RDSConnectionResponse struct {
 	ReadReplicaHosts []string `json:"read_replica_hosts,omitempty"`
 	Port             int      `json:"port"`
 	Username         string   `json:"username"`
-	Database string `json:"database"`
-	Password string `json:"password"`
+	Database         string   `json:"database"`
+	Password         string   `json:"password"`
 	// SSLMode is the recommended libpq sslmode for this instance's TLSMode:
 	// "require" when TLS is enforced (tls_mode=required), "prefer" when TLS is
 	// available but not enforced (tls_mode=optional), "disable" when there is no

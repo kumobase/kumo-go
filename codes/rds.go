@@ -172,4 +172,42 @@ const (
 	// instance (a pg_hba reload); changing TLS availability (the cert) requires
 	// recreating the instance.
 	RDSTLSModeChangeUnsupported = "RDS_TLS_MODE_CHANGE_UNSUPPORTED"
+
+	// ── Backups (to object storage) ───────────────────────────────────────────
+
+	// RDSBackupDisabled — a backup operation (on-demand backup, schedule config,
+	// or restore) was requested but the platform RDS_BACKUP_ENABLED flag is off.
+	// Managed backups are not offered yet on this deployment.
+	RDSBackupDisabled = "RDS_BACKUP_DISABLED"
+
+	// RDSBackupInProgress — a backup is already running for this instance and the
+	// per-instance concurrency cap was reached. Wait for the in-flight backup to
+	// settle (poll its operation_id), then retry.
+	RDSBackupInProgress = "RDS_BACKUP_IN_PROGRESS"
+
+	// RDSBackupNotFound — no backup with the given id exists for this instance in
+	// the caller's scope (also covers cross-tenant access attempts and backups
+	// already deleted/expired).
+	RDSBackupNotFound = "RDS_BACKUP_NOT_FOUND"
+
+	// RDSBackupNotReady — the referenced backup is not in a usable state for the
+	// requested operation (e.g. a restore was requested from a backup that is
+	// still running or has failed). Only a completed backup can be restored.
+	RDSBackupNotReady = "RDS_BACKUP_NOT_READY"
+
+	// RDSBackupTierNotFound — the requested backup tier slug does not exist or is
+	// not active in the catalogue. Call the backup-tier listing for the offered
+	// set, or omit to use the default tier.
+	RDSBackupTierNotFound = "RDS_BACKUP_TIER_NOT_FOUND"
+
+	// RDSRestoreStorageTooSmall — a restore requested a target data-disk size
+	// smaller than the source backup's storage. A restored database must be at
+	// least as large as the database the backup was taken from.
+	RDSRestoreStorageTooSmall = "RDS_RESTORE_STORAGE_TOO_SMALL"
+
+	// RDSPITRNotEnabled — a point-in-time restore (restore_to_time) was requested
+	// for a source database that does not have PITR (continuous WAL archiving)
+	// enabled, so there is no WAL stream to replay. Enable PITR on the source
+	// first (backup config), or omit restore_to_time to restore to a full backup.
+	RDSPITRNotEnabled = "RDS_PITR_NOT_ENABLED"
 )

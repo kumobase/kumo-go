@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"sync/atomic"
 	"testing"
@@ -86,6 +87,85 @@ func TestRDS_Smoke(t *testing.T) {
 	}
 	if seen.method != "DELETE" || seen.path != "/api/v1/rds/7" {
 		t.Errorf("last call: %s %s, want DELETE /api/v1/rds/7", seen.method, seen.path)
+	}
+}
+
+func TestRDS_Backups_Smoke(t *testing.T) {
+	type call struct{ method, path string }
+	var seen call
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seen = call{r.Method, r.URL.Path}
+		switch {
+		case r.Method == "POST" && r.URL.Path == "/api/v1/rds/7/backups":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-b1", Status: string(types.RDSBackupStatusPending)})
+		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/7/backups":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"message": "ok",
+				"data": []types.RDSBackupResponse{
+					{ID: 3, RDSInstanceID: 7, Method: string(types.RDSBackupMethodFull), Status: string(types.RDSBackupStatusCompleted), SizeBytes: 1048576, TierSlug: "s3-standard", RetentionDays: 7},
+				},
+				"meta": types.Meta{Page: 1, PageSize: 20, TotalItems: 1, TotalPages: 1},
+			})
+		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/7/backups/3":
+			writeStruct(w, 200, "", "ok", &types.RDSBackupResponse{ID: 3, RDSInstanceID: 7, Status: string(types.RDSBackupStatusCompleted), SizeBytes: 1048576})
+		case r.Method == "DELETE" && r.URL.Path == "/api/v1/rds/7/backups/3":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 7, OperationID: "op-b2", Status: string(types.RDSBackupStatusDeleting)})
+		case r.Method == "PUT" && r.URL.Path == "/api/v1/rds/7/backup-config":
+			writeStruct(w, 200, "", "ok", &types.RDSBackupConfigResponse{Enabled: true, ScheduleCron: "0 2 * * *", RetentionDays: 7, TierSlug: "s3-standard"})
+		case r.Method == "POST" && r.URL.Path == "/api/v1/rds/7/restore":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 9, OperationID: "op-r1", Status: string(types.RDSStatusProvisioning)})
+		case r.Method == "GET" && r.URL.Path == "/api/v1/rds/backups":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"message": "ok",
+				"data": []types.RDSBackupResponse{
+					{ID: 3, RDSInstanceID: 7, SourceInstanceName: "my-pg", SourceEngineVersion: "16", Method: string(types.RDSBackupMethodFull), Status: string(types.RDSBackupStatusCompleted), SizeBytes: 1048576},
+				},
+				"meta": types.Meta{Page: 1, PageSize: 20, TotalItems: 1, TotalPages: 1},
+			})
+		case r.Method == "POST" && r.URL.Path == "/api/v1/rds/restore":
+			writeStruct(w, 202, "", "queued", &types.RDSMutationResponse{ID: 11, OperationID: "op-rg1", Status: string(types.RDSStatusProvisioning)})
+		}
+	})
+	ctx := context.Background()
+
+	bk, err := c.RDS().CreateBackup(ctx, 7, &types.CreateRDSBackupRequest{RetentionDays: 7})
+	if err != nil || bk.OperationID != "op-b1" {
+		t.Fatalf("CreateBackup: %v (%+v)", err, bk)
+	}
+	list, meta, err := c.RDS().ListBackups(ctx, 7)
+	if err != nil || len(list) != 1 || list[0].ID != 3 || meta.TotalItems != 1 {
+		t.Fatalf("ListBackups: %v (%+v, %+v)", err, list, meta)
+	}
+	got, err := c.RDS().GetBackup(ctx, 7, 3)
+	if err != nil || got.SizeBytes != 1048576 {
+		t.Fatalf("GetBackup: %v (%+v)", err, got)
+	}
+	del, err := c.RDS().DeleteBackup(ctx, 7, 3)
+	if err != nil || del.OperationID != "op-b2" {
+		t.Fatalf("DeleteBackup: %v (%+v)", err, del)
+	}
+	cfg, err := c.RDS().SetBackupConfig(ctx, 7, &types.UpdateRDSBackupConfigRequest{Enabled: true, ScheduleCron: "0 2 * * *", RetentionDays: 7, TierSlug: "s3-standard"})
+	if err != nil || !cfg.Enabled || cfg.ScheduleCron != "0 2 * * *" {
+		t.Fatalf("SetBackupConfig: %v (%+v)", err, cfg)
+	}
+	res, err := c.RDS().Restore(ctx, 7, &types.RestoreRDSBackupRequest{BackupID: 3, Name: "restored-pg", StorageGB: 20})
+	if err != nil || res.ID != 9 || res.OperationID != "op-r1" {
+		t.Fatalf("Restore: %v (%+v)", err, res)
+	}
+	all, meta2, err := c.RDS().ListAllBackups(ctx)
+	if err != nil || len(all) != 1 || all[0].SourceInstanceName != "my-pg" || meta2.TotalItems != 1 {
+		t.Fatalf("ListAllBackups: %v (%+v, %+v)", err, all, meta2)
+	}
+	rg, err := c.RDS().RestoreBackup(ctx, &types.RestoreRDSBackupRequest{BackupID: 3, Name: "restored-global", StorageGB: 20})
+	if err != nil || rg.ID != 11 || rg.OperationID != "op-rg1" {
+		t.Fatalf("RestoreBackup: %v (%+v)", err, rg)
+	}
+	if seen.method != "POST" || seen.path != "/api/v1/rds/restore" {
+		t.Errorf("last call: %s %s, want POST /api/v1/rds/restore", seen.method, seen.path)
 	}
 }
 

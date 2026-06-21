@@ -301,6 +301,136 @@ func (s *RDSService) Delete(ctx context.Context, id uint, opts ...WriteOption) (
 	return &out, nil
 }
 
+// ── Backups (to object storage) ────────────────────────────────────
+
+// CreateBackup starts an on-demand backup of the instance to object storage.
+// Honors Idempotency-Key (retrying the same key returns the same backup rather
+// than starting a second). Gated behind the platform RDS_BACKUP_ENABLED flag
+// (409 RDS_BACKUP_DISABLED when off); rejected with 409 RDS_BACKUP_IN_PROGRESS
+// when a backup is already running, or 409 RDS_INSTANCE_NOT_READY unless the
+// instance is ready. Async (202 + operation_id); poll GetBackup until
+// Status="completed".
+func (s *RDSService) CreateBackup(ctx context.Context, id uint, req *types.CreateRDSBackupRequest, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	if req == nil {
+		req = &types.CreateRDSBackupRequest{}
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "POST", fmt.Sprintf("/api/v1/rds/%d/backups", id), req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ListBackups returns the instance's backups, paginated (newest first). Filter
+// by status with WithExtraQuery("status", "completed").
+func (s *RDSService) ListBackups(ctx context.Context, id uint, opts ...ListOption) ([]types.RDSBackupResponse, *types.Meta, error) {
+	q := resolveListOpts(opts)
+	var out []types.RDSBackupResponse
+	meta, err := s.c.doList(ctx, "GET", withQuery(fmt.Sprintf("/api/v1/rds/%d/backups", id), q), &out)
+	if err != nil {
+		return nil, nil, err
+	}
+	return out, meta, nil
+}
+
+// ListAllBackups returns ALL the caller's backups across every database
+// (including backups whose source database was deleted) — the global backups
+// view. Paginated, newest first. Filter by status with
+// WithExtraQuery("status", "completed").
+func (s *RDSService) ListAllBackups(ctx context.Context, opts ...ListOption) ([]types.RDSBackupResponse, *types.Meta, error) {
+	q := resolveListOpts(opts)
+	var out []types.RDSBackupResponse
+	meta, err := s.c.doList(ctx, "GET", withQuery("/api/v1/rds/backups", q), &out)
+	if err != nil {
+		return nil, nil, err
+	}
+	return out, meta, nil
+}
+
+// RestoreBackup provisions a NEW database from any backup the caller owns, keyed
+// on the backup id (not a source database) — so a RETAINED backup whose source
+// database was deleted is still restorable. Point-in-time recovery is not
+// available here (use Restore on a live source for PITR). Async (202 +
+// operation_id on the new instance).
+func (s *RDSService) RestoreBackup(ctx context.Context, req *types.RestoreRDSBackupRequest, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "POST", "/api/v1/rds/restore", req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetBackup fetches a single backup by id.
+func (s *RDSService) GetBackup(ctx context.Context, id, backupID uint) (*types.RDSBackupResponse, error) {
+	var out types.RDSBackupResponse
+	_, _, err := s.c.do(ctx, "GET", fmt.Sprintf("/api/v1/rds/%d/backups/%d", id, backupID), nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// DeleteBackup removes a backup from object storage and stops billing for it.
+// Async (202 + operation_id). Pass WithIfMatch(etag) to guard against
+// concurrent writes.
+func (s *RDSService) DeleteBackup(ctx context.Context, id, backupID uint, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "DELETE", fmt.Sprintf("/api/v1/rds/%d/backups/%d", id, backupID), nil, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SetBackupConfig enables/disables automatic scheduled backups for an instance
+// and sets the schedule, retention, and backup tier. Gated behind the platform
+// RDS_BACKUP_ENABLED flag (409 RDS_BACKUP_DISABLED when off). Returns the
+// resulting configuration.
+func (s *RDSService) SetBackupConfig(ctx context.Context, id uint, req *types.UpdateRDSBackupConfigRequest, opts ...WriteOption) (*types.RDSBackupConfigResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSBackupConfigResponse
+	_, _, err = s.c.do(ctx, "PUT", fmt.Sprintf("/api/v1/rds/%d/backup-config", id), req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// Restore provisions a NEW database instance from a completed backup (the
+// source instance is untouched and billed independently). The backup must be
+// completed (409 RDS_BACKUP_NOT_READY otherwise) and the target storage must be
+// >= the source's (400 RDS_RESTORE_STORAGE_TOO_SMALL). Async (202 +
+// operation_id on the new instance); poll the returned instance id until ready.
+func (s *RDSService) Restore(ctx context.Context, id uint, req *types.RestoreRDSBackupRequest, opts ...WriteOption) (*types.RDSMutationResponse, error) {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.RDSMutationResponse
+	_, _, err = s.c.do(ctx, "POST", fmt.Sprintf("/api/v1/rds/%d/restore", id), req, &wopts, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (s *RDSService) patch(ctx context.Context, id uint, req *types.UpdateRDSInstanceRequest, opts ...WriteOption) (*types.RDSMutationResponse, error) {
 	wopts, err := resolveWriteOpts(opts)
 	if err != nil {

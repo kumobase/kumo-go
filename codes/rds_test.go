@@ -48,6 +48,13 @@ func TestRDSCodeValues(t *testing.T) {
 		{"RDSInvalidTLSMode", RDSInvalidTLSMode, "RDS_INVALID_TLS_MODE"},
 		{"RDSTLSEnforcementDisabled", RDSTLSEnforcementDisabled, "RDS_TLS_ENFORCEMENT_DISABLED"},
 		{"RDSTLSModeChangeUnsupported", RDSTLSModeChangeUnsupported, "RDS_TLS_MODE_CHANGE_UNSUPPORTED"},
+		{"RDSBackupDisabled", RDSBackupDisabled, "RDS_BACKUP_DISABLED"},
+		{"RDSBackupInProgress", RDSBackupInProgress, "RDS_BACKUP_IN_PROGRESS"},
+		{"RDSBackupNotFound", RDSBackupNotFound, "RDS_BACKUP_NOT_FOUND"},
+		{"RDSBackupNotReady", RDSBackupNotReady, "RDS_BACKUP_NOT_READY"},
+		{"RDSBackupTierNotFound", RDSBackupTierNotFound, "RDS_BACKUP_TIER_NOT_FOUND"},
+		{"RDSRestoreStorageTooSmall", RDSRestoreStorageTooSmall, "RDS_RESTORE_STORAGE_TOO_SMALL"},
+		{"RDSPITRNotEnabled", RDSPITRNotEnabled, "RDS_PITR_NOT_ENABLED"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {
