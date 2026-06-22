@@ -34,16 +34,27 @@ func (s *SourceConnectionsService) List(ctx context.Context) ([]types.SourceConn
 }
 
 // ListRepos returns the repositories the given connection has been granted
-// access to, fetched live from the provider so the result always reflects the
-// account owner's current grant. Powers the repo picker.
+// access to. The server caches the provider's full repo set briefly per
+// installation, then serves paginated, optionally name-filtered slices from it.
+// Powers the repo picker.
+//
+// Pagination is opt-in: with no options the full repo set is returned and the
+// returned *types.Meta is nil (back-compat with the original unpaginated
+// surface). Pass WithPage/WithPageSize to page, or WithExtraQuery("q", name)
+// to filter by repository full-name substring (case-insensitive) — any of
+// these makes the server return one page plus a non-nil *Meta.
 //
 // Returns codes.SourceConnectionNotFound when the connection doesn't exist or
 // isn't owned by the caller, codes.SourceConnectionSuspended when the install
 // is suspended, or codes.SourceProviderError when the provider call fails.
-func (s *SourceConnectionsService) ListRepos(ctx context.Context, id uint) ([]types.SourceRepoResponse, error) {
+func (s *SourceConnectionsService) ListRepos(ctx context.Context, id uint, opts ...ListOption) ([]types.SourceRepoResponse, *types.Meta, error) {
+	q := resolveListOpts(opts)
 	var out []types.SourceRepoResponse
-	_, err := s.c.doList(ctx, "GET", fmt.Sprintf("/api/v1/source-connections/%d/repos", id), &out)
-	return out, err
+	meta, err := s.c.doList(ctx, "GET", withQuery(fmt.Sprintf("/api/v1/source-connections/%d/repos", id), q), &out)
+	if err != nil {
+		return nil, nil, err
+	}
+	return out, meta, nil
 }
 
 // Disconnect removes a source connection and uninstalls the Kumo Build app

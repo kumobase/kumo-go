@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -343,6 +344,11 @@ func TestSourceConnections_Smoke(t *testing.T) {
 		switch {
 		case r.Method == "GET" && r.URL.Path == "/api/v1/source-connections":
 			fmt.Fprint(w, `{"message":"ok","data":[{"id":1,"provider":"github","installation_id":12345,"account_login":"acme","account_type":"Organization","status":"active","created_at":"2026-05-23T10:00:00Z","updated_at":"2026-05-23T10:00:00Z"}]}`)
+		case r.Method == "GET" && r.URL.Path == "/api/v1/source-connections/1/repos" && r.URL.RawQuery != "":
+			// Paginated/filtered surface: echoes a Meta block. Captures the
+			// query so the test can assert page/page_size/q were forwarded.
+			seen.method, seen.path = r.Method, r.URL.Path+"?"+r.URL.RawQuery
+			fmt.Fprint(w, `{"message":"ok","data":[{"id":99,"full_name":"acme/web","private":true,"default_branch":"main"}],"meta":{"page":1,"page_size":30,"total_items":1,"total_pages":1}}`)
 		case r.Method == "GET" && r.URL.Path == "/api/v1/source-connections/1/repos":
 			fmt.Fprint(w, `{"message":"ok","data":[{"id":99,"full_name":"acme/web","private":true,"default_branch":"main"}]}`)
 		case r.Method == "DELETE":
@@ -355,9 +361,22 @@ func TestSourceConnections_Smoke(t *testing.T) {
 	if err != nil || len(conns) != 1 || conns[0].AccountLogin != "acme" {
 		t.Fatalf("List: %v (%+v)", err, conns)
 	}
-	repos, err := c.SourceConnections().ListRepos(ctx, 1)
+	// Unpaginated surface: full list, nil Meta (back-compat).
+	repos, meta, err := c.SourceConnections().ListRepos(ctx, 1)
 	if err != nil || len(repos) != 1 || repos[0].FullName != "acme/web" {
 		t.Fatalf("ListRepos: %v (%+v)", err, repos)
+	}
+	if meta != nil {
+		t.Errorf("unpaginated ListRepos should return nil Meta, got %+v", meta)
+	}
+	// Paginated/filtered surface: page+size+q forwarded, Meta returned.
+	repos, meta, err = c.SourceConnections().ListRepos(ctx, 1,
+		client.WithPage(1), client.WithPageSize(30), client.WithExtraQuery("q", "web"))
+	if err != nil || len(repos) != 1 || meta == nil || meta.TotalItems != 1 {
+		t.Fatalf("ListRepos paginated: %v (repos=%+v meta=%+v)", err, repos, meta)
+	}
+	if !strings.Contains(seen.path, "page=1") || !strings.Contains(seen.path, "page_size=30") || !strings.Contains(seen.path, "q=web") {
+		t.Errorf("ListRepos paginated query not forwarded: %s", seen.path)
 	}
 	disc, err := c.SourceConnections().Disconnect(ctx, 1)
 	if err != nil || disc.ID != 1 {
