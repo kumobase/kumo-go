@@ -55,6 +55,7 @@ func TestRDSCodeValues(t *testing.T) {
 		{"RDSBackupTierNotFound", RDSBackupTierNotFound, "RDS_BACKUP_TIER_NOT_FOUND"},
 		{"RDSRestoreStorageTooSmall", RDSRestoreStorageTooSmall, "RDS_RESTORE_STORAGE_TOO_SMALL"},
 		{"RDSPITRNotEnabled", RDSPITRNotEnabled, "RDS_PITR_NOT_ENABLED"},
+		{"RDSInvalidRestoreTime", RDSInvalidRestoreTime, "RDS_INVALID_RESTORE_TIME"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {

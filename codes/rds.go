@@ -210,4 +210,9 @@ const (
 	// enabled, so there is no WAL stream to replay. Enable PITR on the source
 	// first (backup config), or omit restore_to_time to restore to a full backup.
 	RDSPITRNotEnabled = "RDS_PITR_NOT_ENABLED"
+
+	// RDSInvalidRestoreTime — restore_to_time is malformed (not RFC-3339) or falls
+	// outside the source's restorable WAL window [earliest, latest]. Pick a
+	// timestamp within the reported window.
+	RDSInvalidRestoreTime = "RDS_INVALID_RESTORE_TIME"
 )
