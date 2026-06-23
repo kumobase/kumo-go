@@ -10,6 +10,12 @@ package types
 const (
 	UnitCores = "cores" // CPU, fractional cores (e.g. 0.25)
 	UnitBytes = "bytes" // memory working set
+
+	// Database-metric units (RDS Tier 2).
+	UnitCount     = "count"      // a plain gauge count (e.g. connections, up 0/1)
+	UnitSeconds   = "seconds"    // a duration (e.g. replication lag)
+	UnitPerSecond = "per_second" // a per-second rate (e.g. transactions/sec)
+	UnitPercent   = "percent"    // a 0..100 ratio (e.g. cache-hit ratio)
 )
 
 // AppMetricsRanges are the allowed values of the `range` query parameter.
