@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -38,11 +39,12 @@ func TestRunnerSpecResponse_RoundTrip(t *testing.T) {
 	in := RunnerSpecResponse{
 		Label: "kumo-2c-4g", DisplayName: "2 vCPU / 4 GB", CPU: 2, MemoryMB: 4096,
 		PricePerMinute: "12.5000", Currency: "IDR",
+		Aliases: []string{"kumo-ubuntu-latest"},
 	}
 	b, _ := json.Marshal(in)
-	// The price catalog must carry the rate + currency on the wire.
+	// The price catalog must carry the rate + currency + aliases on the wire.
 	js := string(b)
-	for _, want := range []string{`"price_per_minute":"12.5000"`, `"currency":"IDR"`} {
+	for _, want := range []string{`"price_per_minute":"12.5000"`, `"currency":"IDR"`, `"aliases":["kumo-ubuntu-latest"]`} {
 		if !strings.Contains(js, want) {
 			t.Fatalf("spec DTO missing %s: %s", want, js)
 		}
@@ -51,7 +53,14 @@ func TestRunnerSpecResponse_RoundTrip(t *testing.T) {
 	if err := json.Unmarshal(b, &out); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if out != in {
+	if !reflect.DeepEqual(out, in) {
 		t.Fatalf("round-trip mismatch: %+v", out)
 	}
+
+	// aliases omitempty: absent when nil.
+	if strings.Contains(string(mustJSON(RunnerSpecResponse{Label: "kumo-2c-4g"})), "aliases") {
+		t.Fatal("aliases should be omitted when empty")
+	}
 }
+
+func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }

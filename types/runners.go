@@ -48,6 +48,9 @@ type RunnerSpecResponse struct {
 	MemoryMB       int    `json:"memory_mb"`
 	PricePerMinute string `json:"price_per_minute"` // decimal string, IDR/min
 	Currency       string `json:"currency"`         // "IDR"
+	// Aliases are additional `runs-on` labels that resolve to this same size
+	// (e.g. "kumo-ubuntu-latest" → "kumo-ubuntu-24.04"). Empty when none.
+	Aliases []string `json:"aliases,omitempty"`
 }
 
 // RunnerJobResponse is one CI job that ran (or is queued/running) on Kumo
