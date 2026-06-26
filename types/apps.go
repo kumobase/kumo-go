@@ -23,20 +23,24 @@ const (
 //     or admin).
 //   - AppStatusCrashing / AppStatusImageError surface the concrete runtime
 //     failure instead of a generic "degraded"/"deploying".
+//   - AppStatusBuildQueued is reported for a git-build app whose latest build
+//     is waiting in the global build queue (behind the concurrent-build cap);
+//     it has not started building yet.
 //   - AppStatusBuilding is reported for a git-build app whose first image is
-//     still being built (no workload exists yet); a rebuild of an already
+//     actively being built (no workload exists yet); a rebuild of an already
 //     running app keeps reporting its live status instead.
 const (
-	AppStatusRunning    = "running"
-	AppStatusStopped    = "stopped"
-	AppStatusBuilding   = "building"
-	AppStatusDeploying  = "deploying"
-	AppStatusDegraded   = "degraded"
-	AppStatusCrashing   = "crashing"
-	AppStatusImageError = "image_error"
-	AppStatusFailed     = "failed"
-	AppStatusSuspended  = "suspended"
-	AppStatusUnknown    = "unknown"
+	AppStatusRunning     = "running"
+	AppStatusStopped     = "stopped"
+	AppStatusBuildQueued = "build_queued"
+	AppStatusBuilding    = "building"
+	AppStatusDeploying   = "deploying"
+	AppStatusDegraded    = "degraded"
+	AppStatusCrashing    = "crashing"
+	AppStatusImageError  = "image_error"
+	AppStatusFailed      = "failed"
+	AppStatusSuspended   = "suspended"
+	AppStatusUnknown     = "unknown"
 )
 
 // DomainVerificationStatus is the verification lifecycle of a custom domain

@@ -7,16 +7,17 @@ import "testing"
 // value silently breaks them, so treat a failure here as a breaking change.
 func TestAppStatusValues(t *testing.T) {
 	cases := map[string]string{
-		AppStatusRunning:    "running",
-		AppStatusStopped:    "stopped",
-		AppStatusBuilding:   "building",
-		AppStatusDeploying:  "deploying",
-		AppStatusDegraded:   "degraded",
-		AppStatusCrashing:   "crashing",
-		AppStatusImageError: "image_error",
-		AppStatusFailed:     "failed",
-		AppStatusSuspended:  "suspended",
-		AppStatusUnknown:    "unknown",
+		AppStatusRunning:     "running",
+		AppStatusStopped:     "stopped",
+		AppStatusBuildQueued: "build_queued",
+		AppStatusBuilding:    "building",
+		AppStatusDeploying:   "deploying",
+		AppStatusDegraded:    "degraded",
+		AppStatusCrashing:    "crashing",
+		AppStatusImageError:  "image_error",
+		AppStatusFailed:      "failed",
+		AppStatusSuspended:   "suspended",
+		AppStatusUnknown:     "unknown",
 	}
 	for got, want := range cases {
 		if got != want {
