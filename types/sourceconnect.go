@@ -32,6 +32,10 @@ const (
 // repositories". Changing the grant there needs no reconnect — the platform
 // reads the repo list live. Omitted when it can't be built (e.g. a future
 // non-GitHub provider).
+//
+// AppKind identifies which Kumo GitHub App owns this install: "build" (the
+// git-build/app product) or "runner" (VM CI-runners). Both products record
+// installs in the same surface; clients branch on this to group/filter.
 type SourceConnectionResponse struct {
 	ID             uint                   `json:"id"`
 	Provider       SourceProvider         `json:"provider"`
@@ -40,6 +44,7 @@ type SourceConnectionResponse struct {
 	AccountType    string                 `json:"account_type"` // "User" | "Organization"
 	ManageURL      string                 `json:"manage_url,omitempty"`
 	Status         SourceConnectionStatus `json:"status"`
+	AppKind        string                 `json:"app_kind"` // "build" | "runner"
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
 }
