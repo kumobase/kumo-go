@@ -32,9 +32,9 @@ const (
 )
 
 // RunnerSpecResponse is a logical runner size, returned by GET
-// /api/v1/runner-specs (authenticated) and GET /api/v1/runners/plans (public
-// price catalog) so users can discover which `kumo-*` labels they may put in
-// `runs-on` and what each costs. It is intentionally sanitized: the cloud
+// /api/v1/runners/plans (the public price catalog) so users can discover which
+// `kumo-*` labels they may put in `runs-on` and what each costs. It is
+// intentionally sanitized: the cloud
 // backends (provider, region, instance types, capacity) that fulfill a spec are
 // an internal, admin-only concern and are never exposed here.
 //
@@ -73,16 +73,4 @@ type RunnerJobResponse struct {
 	QueuedAt   time.Time  `json:"queued_at"`
 	StartedAt  *time.Time `json:"started_at,omitempty"`  // when the runner registered
 	FinishedAt *time.Time `json:"finished_at,omitempty"`
-}
-
-// RunnerUsageResponse is the aggregated usage summary returned by GET
-// /api/v1/runner-usage over an optional from/to window (default: current
-// billing period). Minutes is metered VM wall-clock; interrupted time is
-// excluded. EstimatedCents is indicative, not invoiced.
-type RunnerUsageResponse struct {
-	WindowStart    time.Time `json:"window_start"`
-	WindowEnd      time.Time `json:"window_end"`
-	JobCount       int       `json:"job_count"`
-	BilledMinutes  float64   `json:"billed_minutes"`
-	EstimatedCents int64     `json:"estimated_cents"`
 }
