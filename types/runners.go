@@ -32,15 +32,22 @@ const (
 )
 
 // RunnerSpecResponse is a logical runner size, returned by GET
-// /api/v1/runner-specs so users can discover which `kumo-*` labels they may put
-// in `runs-on`. It is intentionally sanitized: the cloud backends (provider,
-// region, instance types, capacity) that fulfill a spec are an internal,
-// admin-only concern and are never exposed here.
+// /api/v1/runner-specs (authenticated) and GET /api/v1/runners/plans (public
+// price catalog) so users can discover which `kumo-*` labels they may put in
+// `runs-on` and what each costs. It is intentionally sanitized: the cloud
+// backends (provider, region, instance types, capacity) that fulfill a spec are
+// an internal, admin-only concern and are never exposed here.
+//
+// PricePerMinute is the customer rate in IDR per VM-minute, a decimal string
+// (e.g. "12.5000") — mirrors the jobs PricePerHour convention; never float.
+// Currency is the ISO code for that rate (always "IDR" today).
 type RunnerSpecResponse struct {
-	Label       string `json:"label"`        // e.g. "kumo-2c-4g" — use in runs-on
-	DisplayName string `json:"display_name"`
-	CPU         int    `json:"cpu"`
-	MemoryMB    int    `json:"memory_mb"`
+	Label          string `json:"label"`        // e.g. "kumo-2c-4g" — use in runs-on
+	DisplayName    string `json:"display_name"`
+	CPU            int    `json:"cpu"`
+	MemoryMB       int    `json:"memory_mb"`
+	PricePerMinute string `json:"price_per_minute"` // decimal string, IDR/min
+	Currency       string `json:"currency"`         // "IDR"
 }
 
 // RunnerJobResponse is one CI job that ran (or is queued/running) on Kumo

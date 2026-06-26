@@ -35,8 +35,18 @@ func TestRunnerJobResponse_NoCloudInternals(t *testing.T) {
 }
 
 func TestRunnerSpecResponse_RoundTrip(t *testing.T) {
-	in := RunnerSpecResponse{Label: "kumo-2c-4g", DisplayName: "2 vCPU / 4 GB", CPU: 2, MemoryMB: 4096}
+	in := RunnerSpecResponse{
+		Label: "kumo-2c-4g", DisplayName: "2 vCPU / 4 GB", CPU: 2, MemoryMB: 4096,
+		PricePerMinute: "12.5000", Currency: "IDR",
+	}
 	b, _ := json.Marshal(in)
+	// The price catalog must carry the rate + currency on the wire.
+	js := string(b)
+	for _, want := range []string{`"price_per_minute":"12.5000"`, `"currency":"IDR"`} {
+		if !strings.Contains(js, want) {
+			t.Fatalf("spec DTO missing %s: %s", want, js)
+		}
+	}
 	var out RunnerSpecResponse
 	if err := json.Unmarshal(b, &out); err != nil {
 		t.Fatalf("unmarshal: %v", err)
