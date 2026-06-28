@@ -29,4 +29,31 @@ const (
 
 	// RunnerInternalError — unexpected server-side failure.
 	RunnerInternalError = "RUNNER_INTERNAL_ERROR"
+
+	// --- GitLab CI provider ---------------------------------------------------
+	// The runner product also fulfills GitLab CI jobs (jobs tagged with a known
+	// `kumo-*` tag on a connected group/project). These codes surface on the
+	// GitLab connect + webhook surfaces; they mirror the GitLab-specific
+	// branches in modules/runners/errors.go and the GitLab connect handlers.
+
+	// RunnerGitLabOAuthFailed — the OAuth authorization-code exchange or a
+	// later token refresh failed; the connection cannot call GitLab. For an
+	// expired/revoked grant the connection is suspended and must be reconnected.
+	RunnerGitLabOAuthFailed = "RUNNER_GITLAB_OAUTH_FAILED"
+
+	// RunnerGitLabTokenInvalid — the bootstrap-presented or stored GitLab
+	// runner token was rejected (expired, revoked, or already consumed).
+	RunnerGitLabTokenInvalid = "RUNNER_GITLAB_TOKEN_INVALID"
+
+	// RunnerGitLabInstanceUnknown — the referenced GitLab instance is not
+	// registered, or its base URL failed validation/connectivity.
+	RunnerGitLabInstanceUnknown = "RUNNER_GITLAB_INSTANCE_UNKNOWN"
+
+	// RunnerGitLabWebhookFailed — creating or deleting the group/project
+	// webhook on GitLab failed (insufficient scope, or a provider error).
+	RunnerGitLabWebhookFailed = "RUNNER_GITLAB_WEBHOOK_FAILED"
+
+	// RunnerGitLabScopeDenied — the OAuth grant lacks a scope the action needs
+	// (e.g. create_runner or api), or the user lost access to the namespace.
+	RunnerGitLabScopeDenied = "RUNNER_GITLAB_SCOPE_DENIED"
 )

@@ -58,17 +58,38 @@ type RunnerSpecResponse struct {
 // reports the size requested and the job's status, but never which cloud,
 // region, or instance handled it (that's an internal scheduling detail).
 //
+// Provider is the CI host the job came from ("github" | "gitlab") — a
+// user-facing discriminator so a unified job list can branch on origin. It is
+// NOT the cloud provider (that stays internal).
+//
+// The provider-specific identifier fields are a tagged union: GitHub jobs carry
+// GithubJobID/RunID/RepoFullName; GitLab jobs carry the GitLab* fields. The
+// unused side is zero/omitted. WebURL deep-links to the job on the provider.
+//
 // State `queued` means the job is waiting for capacity in the admission queue.
-// Conclusion mirrors GitHub's terminal conclusion (or a Kumo reason like
+// Conclusion mirrors the provider's terminal conclusion (or a Kumo reason like
 // no_capacity_timeout) and is empty until the job finishes.
 type RunnerJobResponse struct {
-	ID           uint           `json:"id"`
-	SpecLabel    string         `json:"spec_label"` // the size requested (runs-on label)
-	GithubJobID  int64          `json:"github_job_id"`
-	RunID        int64          `json:"run_id"`
-	RepoFullName string         `json:"repo_full_name"`
-	State        RunnerJobState `json:"state"`
-	Conclusion   string         `json:"conclusion,omitempty"`
+	ID        uint           `json:"id"`
+	Provider  SourceProvider `json:"provider"`   // "github" | "gitlab"
+	SpecLabel string         `json:"spec_label"` // the size requested (runs-on / tag label)
+
+	// GitHub-specific. Always present for github jobs (back-compat: unconditional).
+	GithubJobID  int64  `json:"github_job_id"`
+	RunID        int64  `json:"run_id"`
+	RepoFullName string `json:"repo_full_name"`
+
+	// GitLab-specific. Omitted for github jobs.
+	GitLabJobID      *int64 `json:"gitlab_job_id,omitempty"`
+	GitLabProjectID  *int64 `json:"gitlab_project_id,omitempty"`
+	GitLabPipelineID *int64 `json:"gitlab_pipeline_id,omitempty"`
+
+	// WebURL is a deep-link to the job on the provider (e.g. the GitLab job
+	// page). Omitted when unknown.
+	WebURL string `json:"web_url,omitempty"`
+
+	State      RunnerJobState `json:"state"`
+	Conclusion string         `json:"conclusion,omitempty"`
 
 	QueuedAt   time.Time  `json:"queued_at"`
 	StartedAt  *time.Time `json:"started_at,omitempty"`  // when the runner registered

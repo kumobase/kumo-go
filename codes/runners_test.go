@@ -16,6 +16,11 @@ func TestRunnersCodeValues(t *testing.T) {
 		{"RunnerUnauthorized", RunnerUnauthorized, "RUNNER_UNAUTHORIZED"},
 		{"RunnerInvalidID", RunnerInvalidID, "RUNNER_INVALID_ID"},
 		{"RunnerInternalError", RunnerInternalError, "RUNNER_INTERNAL_ERROR"},
+		{"RunnerGitLabOAuthFailed", RunnerGitLabOAuthFailed, "RUNNER_GITLAB_OAUTH_FAILED"},
+		{"RunnerGitLabTokenInvalid", RunnerGitLabTokenInvalid, "RUNNER_GITLAB_TOKEN_INVALID"},
+		{"RunnerGitLabInstanceUnknown", RunnerGitLabInstanceUnknown, "RUNNER_GITLAB_INSTANCE_UNKNOWN"},
+		{"RunnerGitLabWebhookFailed", RunnerGitLabWebhookFailed, "RUNNER_GITLAB_WEBHOOK_FAILED"},
+		{"RunnerGitLabScopeDenied", RunnerGitLabScopeDenied, "RUNNER_GITLAB_SCOPE_DENIED"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {
