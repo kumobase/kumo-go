@@ -36,17 +36,35 @@ const (
 // AppKind identifies which Kumo GitHub App owns this install: "build" (the
 // git-build/app product) or "runner" (VM CI-runners). Both products record
 // installs in the same surface; clients branch on this to group/filter.
+//
+// AvatarURL and AccountID describe the GitHub account the App is installed on.
+// RepoSelection is the install's grant scope: "all" (every repo, current and
+// future) or "selected" (an explicit subset). RepoCount is the size of that
+// subset and is only meaningful for "selected" — it is omitted/zero for "all",
+// where the count is unbounded. These reflect the install as last synced via
+// the installation webhook; all are omitted when unknown.
+//
+// GitLab is a non-nil sub-object only when Provider == "gitlab"; it carries the
+// GitLab-specific shape (instance, namespace, group/project) that does not fit
+// the GitHub-centric top-level fields. For "gitlab" rows the GitHub-only fields
+// (InstallationID, AccountType, ManageURL, repo summary) are not populated —
+// read GitLab instead.
 type SourceConnectionResponse struct {
-	ID             uint                   `json:"id"`
-	Provider       SourceProvider         `json:"provider"`
-	InstallationID int64                  `json:"installation_id"`
-	AccountLogin   string                 `json:"account_login"`
-	AccountType    string                 `json:"account_type"` // "User" | "Organization"
-	ManageURL      string                 `json:"manage_url,omitempty"`
-	Status         SourceConnectionStatus `json:"status"`
-	AppKind        string                 `json:"app_kind"` // "build" | "runner"
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
+	ID             uint                      `json:"id"`
+	Provider       SourceProvider            `json:"provider"`
+	InstallationID int64                     `json:"installation_id"`
+	AccountLogin   string                    `json:"account_login"`
+	AccountType    string                    `json:"account_type"` // "User" | "Organization"
+	AccountID      int64                     `json:"account_id,omitempty"`
+	AvatarURL      string                    `json:"avatar_url,omitempty"`
+	ManageURL      string                    `json:"manage_url,omitempty"`
+	RepoSelection  string                    `json:"repo_selection,omitempty"` // "all" | "selected"
+	RepoCount      int                       `json:"repo_count,omitempty"`
+	Status         SourceConnectionStatus    `json:"status"`
+	AppKind        string                    `json:"app_kind"` // "build" | "runner"
+	GitLab         *GitLabConnectionResponse `json:"gitlab,omitempty"`
+	CreatedAt      time.Time                 `json:"created_at"`
+	UpdatedAt      time.Time                 `json:"updated_at"`
 }
 
 // SourceRepoResponse is one repository a connection has been granted access
@@ -93,15 +111,28 @@ type GitLabInstanceResponse struct {
 // NamespaceID is GitLab's numeric id. WebURL deep-links to the namespace.
 // Status mirrors SourceConnectionStatus ("active" | "suspended"); a suspended
 // connection means the OAuth grant was revoked/expired and must be reconnected.
+//
+// DisplayName is the namespace's human name ("My Team"), distinct from
+// NamespacePath; it falls back to the path for connections created before the
+// name was captured. InstanceKind tags where the GitLab server lives ("saas"
+// for gitlab.com, "self_managed" for any other host) and Host is that host
+// (e.g. "gitlab.com", "gitlab.acme.com") — both derived from BaseURL so clients
+// can render a "gitlab.com vs self-hosted" badge without parsing URLs. AvatarURL
+// and Visibility ("private" | "internal" | "public") mirror the namespace as
+// last seen on connect; both are omitted when unknown.
 type GitLabConnectionResponse struct {
 	ID            uint                   `json:"id"`
 	Provider      SourceProvider         `json:"provider"` // always "gitlab"
 	InstanceID    uint                   `json:"instance_id"`
 	BaseURL       string                 `json:"base_url"`
+	InstanceKind  string                 `json:"instance_kind,omitempty"` // "saas" | "self_managed"
+	Host          string                 `json:"host,omitempty"`
 	Kind          GitLabNamespaceKind    `json:"kind"` // "group" | "project"
 	NamespaceID   int64                  `json:"namespace_id"`
 	NamespacePath string                 `json:"namespace_path"`
 	DisplayName   string                 `json:"display_name"`
+	AvatarURL     string                 `json:"avatar_url,omitempty"`
+	Visibility    string                 `json:"visibility,omitempty"` // "private" | "internal" | "public"
 	WebURL        string                 `json:"web_url,omitempty"`
 	Status        SourceConnectionStatus `json:"status"`
 	CreatedAt     time.Time              `json:"created_at"`
