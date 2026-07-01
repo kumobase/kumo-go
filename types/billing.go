@@ -127,6 +127,7 @@ type ProductBreakdown struct {
 	Database          string `json:"database"`
 	Jobs              string `json:"jobs"`
 	VMRunners         string `json:"vm_runners"`
+	Packages          string `json:"packages"`
 }
 
 // PeriodSummary is spend totals over a time period.
