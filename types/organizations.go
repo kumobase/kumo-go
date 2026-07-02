@@ -29,6 +29,11 @@ type UpdateOrganizationRequest struct {
 // OrganizationResponse is the detail shape returned by every org endpoint
 // (create, list, get, update). RegistrySuspendedAt is non-nil when an
 // admin has suspended the org's registry access (push/pull will fail).
+//
+// IsDefault marks the per-user platform-provisioned org: auto-created at
+// signup, excluded from the max-organizations quota, and undeletable (a
+// delete attempt returns 409 ORG_CANNOT_DELETE_DEFAULT). Clients should
+// disable/hide the delete action for it.
 type OrganizationResponse struct {
 	ID                      uint       `json:"id"`
 	Slug                    string     `json:"slug"`
@@ -36,6 +41,7 @@ type OrganizationResponse struct {
 	OwnerUserID             uint       `json:"owner_user_id"`
 	RegistryAutoCreateRepos bool       `json:"registry_auto_create_repos"`
 	RegistrySuspendedAt     *time.Time `json:"registry_suspended_at,omitempty"`
+	IsDefault               bool       `json:"is_default"`
 	CreatedAt               time.Time  `json:"created_at"`
 	UpdatedAt               time.Time  `json:"updated_at"`
 }

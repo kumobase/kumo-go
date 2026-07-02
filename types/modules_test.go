@@ -168,7 +168,7 @@ func TestOrganizations_RoundTrip(t *testing.T) {
 	})
 	roundTrip(t, "OrganizationResponse", OrganizationResponse{
 		ID: 1, Slug: "acme", DisplayName: "Acme Corp", OwnerUserID: 1,
-		RegistryAutoCreateRepos: true, CreatedAt: now, UpdatedAt: now,
+		RegistryAutoCreateRepos: true, IsDefault: true, CreatedAt: now, UpdatedAt: now,
 	})
 }
 
