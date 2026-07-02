@@ -226,3 +226,17 @@ func (s *RepositoriesService) GetManifest(ctx context.Context, repoName, digest 
 	}
 	return &out, nil
 }
+
+// DeleteManifest deletes an image manifest by digest. Deletion is by digest,
+// so every tag pointing at that digest is removed. The image is soft-deleted
+// (retained for the repo's soft-delete window) then purged. Returns
+// codes.RegistryManifestNotFound if the digest is not present.
+func (s *RepositoriesService) DeleteManifest(ctx context.Context, repoName, digest string, opts ...WriteOption) error {
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return err
+	}
+	_, _, err = s.c.do(ctx, "DELETE",
+		s.reposURL(repoName+"/manifests/"+digest), nil, &wopts, nil)
+	return err
+}
