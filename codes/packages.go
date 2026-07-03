@@ -1,8 +1,9 @@
 package codes
 
 // Kumo Packages wire codes. Returned both by the language-package registry
-// protocol endpoints (npm today; served at /npm/:org/*) and by the
-// dashboard/management API (/api/v1/registry/organizations/:slug/packages/*).
+// protocol endpoints (npm/maven/pypi/nuget/rubygems; served at /<fmt>/:org/*)
+// and by the dashboard/management API
+// (/api/v1/packages/organizations/:slug/packages/*).
 //
 // Note: the npm protocol endpoints return npm-native JSON bodies and do NOT
 // embed these codes in the response body — npm dictates the wire shape. The
