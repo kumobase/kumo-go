@@ -11,6 +11,11 @@ func TestTicketsCodeValues(t *testing.T) {
 		want string
 	}{
 		{"TicketInvalidStatusTransition", TicketInvalidStatusTransition, "TICKET_INVALID_STATUS_TRANSITION"},
+		{"TicketReopenNotAllowed", TicketReopenNotAllowed, "TICKET_REOPEN_NOT_ALLOWED"},
+		{"TicketRatingNotAllowed", TicketRatingNotAllowed, "TICKET_RATING_NOT_ALLOWED"},
+		{"TicketRatingLocked", TicketRatingLocked, "TICKET_RATING_LOCKED"},
+		{"TicketEditNotAllowed", TicketEditNotAllowed, "TICKET_EDIT_NOT_ALLOWED"},
+		{"TicketInvalidAssignee", TicketInvalidAssignee, "TICKET_INVALID_ASSIGNEE"},
 	}
 	for _, tc := range cases {
 		if tc.got != tc.want {

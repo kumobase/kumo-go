@@ -6,4 +6,4 @@ package version
 // SDKVersion is the SemVer of the kumo-go release this code was built
 // against. The constant is bumped in the same commit that creates the git
 // tag, so a build is always traceable to a published tag.
-const SDKVersion = "v0.32.1"
+const SDKVersion = "v0.35.0"

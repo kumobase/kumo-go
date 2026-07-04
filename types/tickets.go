@@ -25,6 +25,25 @@ type AddMessageRequest struct {
 	Content string `json:"content"` // 1..10000 chars
 }
 
+// UpdateTicketRequest is the body for PATCH /api/v1/tickets/:id. All fields are
+// optional pointers (PATCH semantics): only the non-nil fields are updated. The
+// server rejects the edit unless the ticket is still "open" (before staff
+// engages). Category/Priority accept the same enum values as CreateTicketRequest.
+type UpdateTicketRequest struct {
+	Subject     *string `json:"subject,omitempty"`     // 1..500 chars
+	Description *string `json:"description,omitempty"` // 1..5000 chars
+	Category    *string `json:"category,omitempty"`
+	Priority    *string `json:"priority,omitempty"`
+}
+
+// RateTicketRequest is the body for POST /api/v1/tickets/:id/rating. Rating is a
+// 1..5 CSAT score; Comment is optional. Allowed only once the ticket is
+// resolved or closed; a rating locks once the ticket is closed.
+type RateTicketRequest struct {
+	Rating  int    `json:"rating"` // 1..5
+	Comment string `json:"comment,omitempty"`
+}
+
 // TicketResponse is the detail shape returned by GET /api/v1/tickets/:id.
 // Messages is populated on the detail endpoint and omitted from list rows.
 type TicketResponse struct {
@@ -41,7 +60,12 @@ type TicketResponse struct {
 	ClosedAt     *time.Time        `json:"closed_at,omitempty"`
 	CreatedAt    time.Time         `json:"created_at"`
 	UpdatedAt    time.Time         `json:"updated_at"`
-	Messages     []MessageResponse `json:"messages,omitempty"`
+	// Rating (1..5), RatingComment and RatedAt carry the customer's CSAT
+	// feedback once a resolved/closed ticket has been rated; nil/empty until then.
+	Rating        *int       `json:"rating,omitempty"`
+	RatingComment string     `json:"rating_comment,omitempty"`
+	RatedAt       *time.Time `json:"rated_at,omitempty"`
+	Messages      []MessageResponse `json:"messages,omitempty"`
 }
 
 // MessageResponse is one message inside a TicketResponse. IsAdmin lets the

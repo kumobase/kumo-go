@@ -294,6 +294,23 @@ func TestRegistry_ReposScopedBySlug(t *testing.T) {
 	}
 }
 
+func TestRegistry_DeleteManifest(t *testing.T) {
+	var seenMethod, seenPath string
+	c, _ := newTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		seenMethod, seenPath = r.Method, r.URL.Path
+		writeStruct(w, 200, "", "ok", nil)
+	})
+	err := c.Registry().Repos("acme").DeleteManifest(
+		context.Background(), "demo", "sha256:abc")
+	if err != nil {
+		t.Fatalf("DeleteManifest: %v", err)
+	}
+	wantPath := "/api/v1/registry/organizations/acme/repositories/demo/manifests/sha256:abc"
+	if seenMethod != "DELETE" || seenPath != wantPath {
+		t.Errorf("last call: %s %s, want DELETE %s", seenMethod, seenPath, wantPath)
+	}
+}
+
 // ── Billing / Profile ────────────────────────────────────────────────
 
 func TestBilling_GetSummary(t *testing.T) {

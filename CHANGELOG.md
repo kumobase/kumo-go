@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.33.0]
+
+### Added
+- `types/tickets.go` — `UpdateTicketRequest` (customer PATCH edit of
+  subject/description/category/priority, open-only) and `RateTicketRequest`
+  (1..5 CSAT rating + optional comment). `TicketResponse` gains `Rating`,
+  `RatingComment`, `RatedAt`.
+- `codes/tickets.go` — `TICKET_REOPEN_NOT_ALLOWED`, `TICKET_RATING_NOT_ALLOWED`,
+  `TICKET_RATING_LOCKED`, `TICKET_EDIT_NOT_ALLOWED`, `TICKET_INVALID_ASSIGNEE`
+  (ticket reopen, CSAT rating, customer edit, and standalone admin assign flows).
+
 ## [v0.26.0]
 
 ### Added
