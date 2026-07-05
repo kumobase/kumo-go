@@ -17,11 +17,47 @@ import "time"
 // robot account) instead of a control-plane key. Registry keys are
 // rejected on every /api/v1/* route (403 REGISTRY_KEY_HTTP_FORBIDDEN) and
 // can only authenticate against the OCI /v2/token endpoint.
+//
+// Grants is the unified permission model that supersedes the Scopes /
+// RegistryScope split: one key carries a list of per-product grants, each
+// naming a Domain, its Actions, and (for org-scoped domains) the Orgs it
+// applies to. When Grants is set, Scopes and RegistryScope are ignored.
+// Scopes / RegistryScope remain supported for backward compatibility and
+// are translated into equivalent grants server-side. Conditions is a
+// forward-compatible, token-level constraint block (e.g. IP allowlist);
+// its fields are validated but not all are enforced yet.
 type CreateAPIKeyRequest struct {
 	Name          string              `json:"name"` // 1..100 chars
 	ExpiresInDays *int                `json:"expires_in_days,omitempty"`
 	Scopes        []string            `json:"scopes,omitempty"`
 	RegistryScope *RegistryScopeInput `json:"registry_scope,omitempty"`
+	Grants        []Grant             `json:"grants,omitempty"`
+	Conditions    *TokenConditions    `json:"conditions,omitempty"`
+}
+
+// Grant is one entry in the unified permission model: it authorizes a set
+// of Actions within a single product Domain, optionally restricted to
+// specific Orgs.
+//
+//   - Domain is a product area, e.g. "control_plane" or "registry".
+//   - Actions are domain-specific verbs: control_plane → {read, write};
+//     registry → {pull, push, delete} (push implies pull).
+//   - Orgs are organization slugs. It is only meaningful for org-scoped
+//     domains (e.g. registry); an empty list means "every organization the
+//     owning user belongs to". Listing several orgs grants the actions in
+//     each of them (membership is still enforced per request).
+type Grant struct {
+	Domain  string   `json:"domain"`
+	Actions []string `json:"actions"`
+	Orgs    []string `json:"orgs,omitempty"`
+}
+
+// TokenConditions holds token-level constraints applied to every request
+// made with the key. It is intentionally forward-compatible: new fields may
+// be added over time. IPAllowlist is reserved — accepted and validated, but
+// not yet enforced.
+type TokenConditions struct {
+	IPAllowlist []string `json:"ip_allowlist,omitempty"`
 }
 
 // RegistryScopeInput turns the new key into a registry credential.
@@ -58,6 +94,13 @@ type APIKeyResponse struct {
 	RegistryOrgSlug     *string  `json:"registry_org_slug,omitempty"`
 	RegistryRepoName    *string  `json:"registry_repo_name,omitempty"`
 	RegistryPermissions []string `json:"registry_permissions,omitempty"`
+
+	// Grants is the unified permission view of the key (org slugs resolved
+	// for display). Present on keys created via the unified model; omitted
+	// for legacy keys that still carry only Scopes / registry_* fields.
+	// Conditions echoes any token-level constraints attached at creation.
+	Grants     []Grant          `json:"grants,omitempty"`
+	Conditions *TokenConditions `json:"conditions,omitempty"`
 }
 
 // APIKeyCreateResponse is returned by POST /api/v1/api-keys. The full

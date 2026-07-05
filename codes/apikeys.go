@@ -52,4 +52,20 @@ const (
 	// RegistryKeyRepoPinDisabled — repo-level pinning was requested but is
 	// disabled on this deployment.
 	RegistryKeyRepoPinDisabled = "REGISTRY_KEY_REPO_PIN_DISABLED"
+
+	// Unified-grants codes. Returned by the API-key CRUD surface when a
+	// request's grants[] / conditions{} fail validation.
+
+	// APIKeyUnknownDomain — a grant named a product domain the server does
+	// not recognize (not one of control_plane, registry, …).
+	APIKeyUnknownDomain = "API_KEY_UNKNOWN_DOMAIN"
+
+	// APIKeyInvalidGrant — a grant is malformed: an action not valid for its
+	// domain, an org restriction on a non-org-scoped domain, a missing/empty
+	// action set, or (currently) more than can be expressed.
+	APIKeyInvalidGrant = "API_KEY_INVALID_GRANT"
+
+	// APIKeyInvalidCondition — conditions{} carried an unknown or malformed
+	// field.
+	APIKeyInvalidCondition = "API_KEY_INVALID_CONDITION"
 )
