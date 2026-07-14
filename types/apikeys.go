@@ -39,11 +39,13 @@ type CreateAPIKeyRequest struct {
 // of Actions within a single product Domain, optionally restricted to
 // specific Orgs.
 //
-//   - Domain is a product area, e.g. "control_plane" or "registry".
+//   - Domain is a product area, e.g. "control_plane", "registry", or
+//     "packages".
 //   - Actions are domain-specific verbs: control_plane → {read, write};
-//     registry → {pull, push, delete} (push implies pull).
+//     registry → {pull, push, delete} (push implies pull);
+//     packages → {read, write, delete} (write implies delete).
 //   - Orgs are organization slugs. It is only meaningful for org-scoped
-//     domains (e.g. registry); an empty list means "every organization the
+//     domains (e.g. registry, packages); an empty list means "every organization the
 //     owning user belongs to". Listing several orgs grants the actions in
 //     each of them (membership is still enforced per request).
 type Grant struct {
