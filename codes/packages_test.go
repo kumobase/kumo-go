@@ -15,6 +15,7 @@ func TestPackagesCodeValues(t *testing.T) {
 		{"PackageVersionExists", PackageVersionExists, "PACKAGE_VERSION_EXISTS"},
 		{"PackageInvalidName", PackageInvalidName, "PACKAGE_INVALID_NAME"},
 		{"PackageInvalidVersion", PackageInvalidVersion, "PACKAGE_INVALID_VERSION"},
+		{"PackageInvalidFormat", PackageInvalidFormat, "PACKAGE_INVALID_FORMAT"},
 		{"PackageIntegrityMismatch", PackageIntegrityMismatch, "PACKAGE_INTEGRITY_MISMATCH"},
 		{"PackageMalformedPublish", PackageMalformedPublish, "PACKAGE_MALFORMED_PUBLISH"},
 		{"PackageTarballTooLarge", PackageTarballTooLarge, "PACKAGE_TARBALL_TOO_LARGE"},

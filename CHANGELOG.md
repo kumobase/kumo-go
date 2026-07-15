@@ -6,6 +6,33 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.39.0]
+
+### Added
+- `types/packages.go` — the Kumo Packages management DTOs: `PackageResponse`,
+  `PackageVersionResponse`, `PackageDetailResponse`, plus the `PackageFormat`
+  enum (`npm`, `maven`, `pypi`, `nuget`, `rubygems`). Only the pricing catalogue
+  had an SDK surface before this; the management API had none.
+- `client/packages.go` — `Packages()` with `ListPlans()` (public catalogue) and
+  `Org(slug)` exposing `List`, `Get`, `GetVersion`, `Delete`, `DeleteVersion`
+  over `/api/v1/packages/organizations/{slug}/packages/*`.
+- `codes/packages.go` — `PACKAGE_INVALID_FORMAT` for an unrecognised `{format}`
+  path segment.
+- `client/errors.go` — `IsNotFound` now covers `PACKAGE_NOT_FOUND`,
+  `PACKAGE_VERSION_NOT_FOUND`, `PACKAGE_TAG_NOT_FOUND`; `IsConflict` covers
+  `PACKAGE_VERSION_EXISTS`.
+
+### Fixed
+- `types/packages.go` — the `PackagesPricingResponse` doc comment named
+  `GET /api/v1/public/packages/plans`, a route that does not exist. The real
+  path is `GET /api/v1/packages/plans`. Doc-only; no wire change.
+
+### Notes
+- Package format is part of a package's identity, not a filter: the server
+  enforces uniqueness on (organization, format, name), so the same name can
+  exist under several formats in one org. Every single-package call therefore
+  takes a `PackageFormat`.
+
 ## [v0.33.0]
 
 ### Added

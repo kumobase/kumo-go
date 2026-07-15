@@ -16,6 +16,12 @@ const (
 	PackageInvalidName     = "PACKAGE_INVALID_NAME"
 	PackageInvalidVersion  = "PACKAGE_INVALID_VERSION"
 
+	// PackageInvalidFormat — the {format} path segment on the management API is
+	// not one of npm|maven|pypi|nuget|rubygems. Format is part of a package's
+	// identity (uniqueness is per organization+format+name), so it is required
+	// on every call addressing a single package.
+	PackageInvalidFormat = "PACKAGE_INVALID_FORMAT"
+
 	PackageIntegrityMismatch = "PACKAGE_INTEGRITY_MISMATCH"
 	PackageMalformedPublish  = "PACKAGE_MALFORMED_PUBLISH"
 	PackageTarballTooLarge   = "PACKAGE_TARBALL_TOO_LARGE"

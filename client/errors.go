@@ -119,6 +119,7 @@ func IsNotFound(err error) bool {
 		codes.InstanceNotFound, codes.PlanNotFound, codes.ProviderNotFound,
 		codes.OrgNotFound,
 		codes.RegistryRepositoryNotFound, codes.RegistryManifestNotFound, codes.RegistryBlobNotFound,
+		codes.PackageNotFound, codes.PackageVersionNotFound, codes.PackageTagNotFound,
 		codes.APIKeyNotFound:
 		return true
 	}
@@ -144,7 +145,8 @@ func IsConflict(err error) bool {
 		codes.VolumeAttached, codes.VolumePermanentlyAttached, codes.VolumeResizing,
 		codes.ActionInProgress, codes.AutoRenewAlreadyCancelled,
 		codes.OrgSlugTaken, codes.OrgMaxOrganizationsReached, codes.OrgHasRepos, codes.OrgCannotDeleteDefault,
-		codes.RegistryRepositoryAlreadyExists, codes.RegistryTagImmutable, codes.RegistryMaxRepositoriesReached:
+		codes.RegistryRepositoryAlreadyExists, codes.RegistryTagImmutable, codes.RegistryMaxRepositoriesReached,
+		codes.PackageVersionExists:
 		return true
 	}
 	return false
