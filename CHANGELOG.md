@@ -6,6 +6,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.39.1]
+
+### Added
+- `types/jobs.go` — `JobResourceTemplate` and `JobExecution` now name their CPU
+  and memory numbers explicitly: `cpu_request_vcpu`, `cpu_limit_vcpu`,
+  `memory_request_mb`, `memory_limit_mb`, matching the naming
+  `TemplateWithPricing` already uses on `GET /api/v1/apps/plans`. Previously the
+  jobs surface exposed a single unlabelled `cpu_vcpu` (the request), while the
+  plan picker advertised the limit — the same plan reported two different CPU
+  numbers with no way to tell which was which.
+
+### Deprecated
+- `types/jobs.go` — `JobResourceTemplate.CPUvCPU` / `.MemoryMB` and
+  `JobExecution.CPUvCPU` / `.MemoryMB`. Ambiguous names; use the `*Request*`
+  fields. Both are still populated on the wire — no consumer breaks.
+
+### Notes
+- The `*Limit` fields on `JobExecution` are `omitempty`: executions recorded
+  before the limit snapshot existed read back NULL and omit them. Treat a
+  missing limit as equal to the request.
+
 ## [v0.39.0]
 
 ### Added

@@ -134,12 +134,31 @@ type UpdateJobRequest struct {
 // ResourceTemplateVersion exposed on the job. Same fields the apps surface
 // publishes; admin-only fields (base_price, margin_*) are intentionally
 // stripped.
+//
+// A plan carries two CPU/memory numbers: the guaranteed request and the burst
+// ceiling (the limit). They are named explicitly here so a client never has to
+// guess which one it is looking at — CPURequestvCPU / CPULimitvCPU mirror the
+// naming already used by TemplateWithPricing on GET /api/v1/apps/plans, the
+// catalogue these values are pinned from.
 type JobResourceTemplate struct {
-	Slug         string `json:"slug"`
-	Name         string `json:"name"`
-	CPUvCPU      string `json:"cpu_vcpu"`        // decimal string
-	MemoryMB     int    `json:"memory_mb"`
-	PricePerHour string `json:"price_per_hour"`  // decimal string
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+
+	// CPUvCPU is the guaranteed request.
+	//
+	// Deprecated: ambiguous name — use CPURequestvCPU. Still populated.
+	CPUvCPU string `json:"cpu_vcpu"` // decimal string
+	// MemoryMB is the guaranteed request, in MB.
+	//
+	// Deprecated: ambiguous name — use MemoryRequestMB. Still populated.
+	MemoryMB int `json:"memory_mb"`
+
+	CPURequestvCPU  string `json:"cpu_request_vcpu"` // decimal string
+	CPULimitvCPU    string `json:"cpu_limit_vcpu"`   // decimal string, burst ceiling
+	MemoryRequestMB int    `json:"memory_request_mb"`
+	MemoryLimitMB   int    `json:"memory_limit_mb"`
+
+	PricePerHour string `json:"price_per_hour"` // decimal string
 }
 
 // JobResponse is the detail shape returned by GET /api/v1/jobs/:id and
@@ -209,6 +228,11 @@ type ResponseJobAsync struct {
 // JobExecution is one row in the executions history, the source of truth
 // for billing and audit. BilledAmount is a decimal string; null until the
 // jobs_charger worker has settled the execution.
+//
+// The resource fields are a snapshot frozen when the execution started, so a
+// later plan change on the parent job never rewrites history. Executions that
+// ran before the limit snapshot existed omit the *Limit fields entirely — treat
+// a missing limit as "equal to the request".
 type JobExecution struct {
 	ID            uint                `json:"id"`
 	JobID         uint                `json:"job_id"`
@@ -219,10 +243,23 @@ type JobExecution struct {
 	PodStartedAt  *time.Time          `json:"pod_started_at,omitempty"`
 	PodFinishedAt *time.Time          `json:"pod_finished_at,omitempty"`
 	DurationMS    *int64              `json:"duration_ms,omitempty"`
-	CPUvCPU       string              `json:"cpu_vcpu,omitempty"`  // decimal string snapshot
-	MemoryMB      int                 `json:"memory_mb,omitempty"`
-	BilledAmount  *string             `json:"billed_amount,omitempty"`
-	CreatedAt     time.Time           `json:"created_at"`
+
+	// CPUvCPU is the guaranteed request snapshot.
+	//
+	// Deprecated: ambiguous name — use CPURequestvCPU. Still populated.
+	CPUvCPU string `json:"cpu_vcpu,omitempty"` // decimal string snapshot
+	// MemoryMB is the guaranteed request snapshot, in MB.
+	//
+	// Deprecated: ambiguous name — use MemoryRequestMB. Still populated.
+	MemoryMB int `json:"memory_mb,omitempty"`
+
+	CPURequestvCPU  string `json:"cpu_request_vcpu,omitempty"` // decimal string
+	CPULimitvCPU    string `json:"cpu_limit_vcpu,omitempty"`   // decimal string, burst ceiling
+	MemoryRequestMB int    `json:"memory_request_mb,omitempty"`
+	MemoryLimitMB   int    `json:"memory_limit_mb,omitempty"`
+
+	BilledAmount *string   `json:"billed_amount,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 // RunJobResponse is the 202 payload for POST /api/v1/jobs/:id/run. Clients
