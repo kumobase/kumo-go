@@ -16,6 +16,7 @@ type config struct {
 	baseURL    string
 	httpClient *http.Client
 	auth       *authConfig
+	public     bool
 	userAgent  string
 	logger     func(format string, args ...any)
 
@@ -84,7 +85,7 @@ func WithRetries(maxAttempts int) Option {
 // logs can attribute traffic to your integration:
 //
 //	WithUserAgent("terraform-provider-kumo/0.3.1")  →
-//	  User-Agent: kumo-go/0.2.0 (…) terraform-provider-kumo/0.3.1
+//	  User-Agent: kumo-go/0.40.0 (…) terraform-provider-kumo/0.3.1
 func WithUserAgent(extra string) Option {
 	return func(c *config) {
 		if extra != "" {
@@ -126,6 +127,6 @@ func (c *config) validate() error {
 // the other way (cmd-line tooling reads version.SDKVersion).
 //
 // On every SDK release, bump this constant in lockstep with
-// version.SDKVersion. The pinning test in the server cross-checks the wire
-// codes; the User-Agent is purely cosmetic so no test gates it.
-func sdkVersionForUA() string { return "0.2.0" }
+// version.SDKVersion. TestAuth_UserAgentIncludesSDKVersion gates the visible
+// User-Agent value.
+func sdkVersionForUA() string { return "0.40.0" }

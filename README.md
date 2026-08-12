@@ -1,8 +1,8 @@
 # kumo-go
 
 Public Go SDK for the [Kumo](https://kumobase.com) platform — the wire-level
-contract (DTOs and stable error codes) for everything a customer-facing API
-key (`kumo_sk_…`) can call.
+contract (DTOs, stable error codes, and HTTP client) for Kumo's customer-facing
+API.
 
 ## What's in here
 
@@ -10,12 +10,12 @@ key (`kumo_sk_…`) can call.
 types/    Request and response DTOs for every user-facing /api/v1/* endpoint.
 codes/    Stable wire error codes (UPPER_SNAKE_CASE) returned in the Code
           field of error responses. Clients should branch on Code, not Message.
+client/   Authenticated API client and restricted unauthenticated catalogue client.
 version/  SDK version constant for User-Agent / compat checks.
 ```
 
 ## What's **not** here
 
-- HTTP client — coming in a follow-up release.
 - Admin endpoints (`/api/v1/admin/*`) — internal-only, never exposed.
 - Internal model structs (GORM rows, validation tags, etc.).
 
@@ -27,32 +27,40 @@ go get github.com/kumobase/kumo-go
 
 ## Quickstart
 
-Decode an `Idempotency-Key`-friendly response:
+Create an authenticated client with exactly one API key or JWT:
 
 ```go
-package main
-
 import (
-    "encoding/json"
-    "fmt"
-    "os"
-
-    "github.com/kumobase/kumo-go/codes"
-    "github.com/kumobase/kumo-go/types"
+	"github.com/kumobase/kumo-go/client"
 )
 
-func main() {
-    body, _ := os.ReadFile("response.json")
-    var env types.StructureResponse
-    _ = json.Unmarshal(body, &env)
-
-    if env.Code == codes.AppNotFound {
-        fmt.Println("app not found")
-        return
-    }
-    // …
-}
+c, err := client.New("https://api.kumo.run",
+	client.WithAPIKey("kumo_sk_…"))
 ```
+
+For signed-out pricing and discovery, create a client that cannot access any
+protected endpoint and never sends an `Authorization` header:
+
+```go
+c, err := client.NewPublic("https://api.kumo.run")
+plans, err := c.Apps().ListPlans(ctx)
+```
+
+`NewPublic` permits only exact GET requests to these paths (query parameters
+are allowed):
+
+- `/api/v1/apps/plans`
+- `/api/v1/vps/regions`
+- `/api/v1/vps/providers`
+- `/api/v1/vps/plans`
+- `/api/v1/volumes/plans`
+- `/api/v1/registry/plans`
+- `/api/v1/packages/plans`
+- `/api/v1/runners/plans`
+
+Authentication options are rejected by `NewPublic`. Other options, including
+custom HTTP clients, retries, loggers, user agents, and `WithBaseURL`, remain
+available. Disallowed calls fail locally with `client.ErrPublicClientRestricted`.
 
 ## Compatibility
 
@@ -65,9 +73,8 @@ SDK SemVer follows Go module rules:
 - **Major (v1.x → v2.0.0)** — wire-breaking; rare. New major shipped as
   `github.com/kumobase/kumo-go/v2`.
 
-Server and SDK ship together: server release `vX.Y.Z` is built against
-kumo-go `vX.Y.Z`. Older SDK versions are accepted as long as the server's
-`MIN_SDK_VERSION` allows.
+Kumo pins an explicit kumo-go release. Older SDK versions remain compatible
+unless a server endpoint explicitly documents a newer minimum.
 
 ## License
 

@@ -4,7 +4,7 @@
 // packages are the public contract; this package is the transport layer
 // over them.
 //
-// Quickstart:
+// Authenticated quickstart:
 //
 //	c, err := client.New("https://api.kumo.run",
 //	    client.WithAPIKey("kumo_sk_…"))
@@ -15,6 +15,17 @@
 //	})
 //	if errors.Is(err, client.ErrIdempotencyKeyConflict) { … }
 //	if client.IsCode(err, codes.AppQuotaExceeded) { … }
+//
+// Public catalogue quickstart:
+//
+//	c, err := client.NewPublic("https://api.kumo.run")
+//	plans, err := c.Apps().ListPlans(ctx)
+//
+// Public clients are locally restricted to exact GET requests for apps/plans,
+// vps/regions, vps/providers, vps/plans, volumes/plans, registry/plans,
+// packages/plans, and runners/plans under /api/v1. Query parameters are
+// allowed; protected paths, subpaths, and mutations return
+// ErrPublicClientRestricted without making an HTTP request.
 package client
 
 import (
@@ -80,6 +91,7 @@ func (e *APIError) Unwrap() error {
 // don't have dedicated sentinels — use the IsCode predicate or branch on
 // (*APIError).Code directly.
 var (
+	ErrPublicClientRestricted   = errors.New("public client is restricted to public catalogue GET requests")
 	ErrIdempotencyKeyConflict   = errors.New("idempotency key conflict: same key, different body")
 	ErrIdempotencyInProgress    = errors.New("idempotency in progress: same key still running")
 	ErrETagMismatch             = errors.New("etag mismatch: resource was modified concurrently")

@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.40.0]
+
+### Added
+- `client.NewPublic` creates an unauthenticated client locally restricted to
+  the eight public catalogue GET endpoints. Authentication options, protected
+  paths, subpaths, lookalikes, and mutations are rejected with
+  `ErrPublicClientRestricted` before any HTTP request.
+- `types.VPSProviderResponse` and `VPSService.ListProviders` expose the
+  sanitized public VPS-provider catalogue.
+- `RunnersService.ListPlans` exposes the sanitized public runner-size and price
+  catalogue.
+
+### Changed
+- The SDK User-Agent now reports `kumo-go/0.40.0`, matching
+  `version.SDKVersion`.
+
 ## [v0.39.1]
 
 ### Added

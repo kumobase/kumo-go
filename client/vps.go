@@ -33,6 +33,18 @@ func (s *VPSService) ListRegions(ctx context.Context) ([]types.VPSRegionResponse
 	return out, nil
 }
 
+// ListProviders returns the enabled VPS providers exposed in the public
+// catalogue. Internal provider infrastructure and pricing configuration are
+// not included.
+func (s *VPSService) ListProviders(ctx context.Context) ([]types.VPSProviderResponse, error) {
+	var out []types.VPSProviderResponse
+	_, _, err := s.c.do(ctx, "GET", "/api/v1/vps/providers", nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListPlans returns the public VPS plan catalogue. Filter by region with
 // WithExtraQuery("region", "sgp"). Server returns 400 MISSING_REGION when
 // the catalogue requires a region selector and none is supplied.

@@ -48,6 +48,13 @@ type VPSRegionResponse struct {
 	Name string `json:"name"`
 }
 
+// VPSProviderResponse is one enabled provider returned by
+// GET /api/v1/vps/providers. Provider infrastructure and pricing configuration
+// are intentionally absent from this public catalogue DTO.
+type VPSProviderResponse struct {
+	Name string `json:"name"`
+}
+
 // PublicVPSPlanResponse is the customer-facing plan DTO. Internal pricing
 // detail (base_price, margin_usd, exchange_rate) is intentionally absent;
 // only the final SellingPrice is exposed.

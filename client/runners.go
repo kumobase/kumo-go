@@ -20,6 +20,18 @@ type RunnersService struct {
 // Runners returns the runners service.
 func (c *Client) Runners() *RunnersService { return &RunnersService{c: c} }
 
+// ListPlans returns the public runner-size catalogue. The response contains
+// logical sizes and customer prices only; provider, region, instance type, and
+// capacity stay internal to Kumo.
+func (s *RunnersService) ListPlans(ctx context.Context) ([]types.RunnerSpecResponse, error) {
+	var out []types.RunnerSpecResponse
+	_, _, err := s.c.do(ctx, "GET", "/api/v1/runners/plans", nil, nil, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListJobs returns your CI jobs that ran (or are queued/running) on Kumo
 // runners, newest first. Filter with WithExtraQuery("state", …) using a
 // types.RunnerJobState value (e.g. "queued", "running", "completed").

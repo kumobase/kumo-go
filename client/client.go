@@ -68,6 +68,9 @@ func (c *Client) do(
 	wopts *writeOpts,
 	out any,
 ) (etag string, resp *http.Response, err error) {
+	if err := c.checkPublicRequest(method, path); err != nil {
+		return "", nil, err
+	}
 	url := c.cfg.baseURL + path
 
 	// Marshal body once; we re-use the bytes across retries.
@@ -173,6 +176,9 @@ func (c *Client) doList(
 	method, path string,
 	out any,
 ) (*types.Meta, error) {
+	if err := c.checkPublicRequest(method, path); err != nil {
+		return nil, err
+	}
 	url := c.cfg.baseURL + path
 
 	attempts := c.cfg.retry.maxAttempts

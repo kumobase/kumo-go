@@ -130,8 +130,8 @@ func TestAuth_UserAgentIncludesSDKVersion(t *testing.T) {
 		writeStruct(w, 200, "", "ok", nil)
 	})
 	_, _, _ = c.Apps().Get(context.Background(), 1)
-	if !contains(got, "kumo-go/0.2.0") {
-		t.Errorf("User-Agent: got %q, expected to contain kumo-go/0.2.0", got)
+	if !contains(got, "kumo-go/0.40.0") {
+		t.Errorf("User-Agent: got %q, expected to contain kumo-go/0.40.0", got)
 	}
 }
 

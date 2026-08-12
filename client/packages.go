@@ -37,8 +37,9 @@ func (p *PackagesService) Org(orgSlug string) *OrgPackagesService {
 // structure (base cost, margin, the per-GB-hour rate) is never exposed; see
 // types.PackagesPlanOption.
 //
-// The route is unauthenticated server-side; the SDK sends credentials anyway,
-// which the server ignores.
+// The route is unauthenticated server-side. It is available through both
+// authenticated clients created with New and restricted public clients created
+// with NewPublic.
 func (p *PackagesService) ListPlans(ctx context.Context, opts ...ListOption) ([]types.PackagesPlanOption, error) {
 	q := resolveListOpts(opts)
 	var out types.PackagesPricingResponse
