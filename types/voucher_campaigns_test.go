@@ -18,7 +18,7 @@ func TestVoucherCampaignRequestsRoundTrip(t *testing.T) {
 		Slug: "merdeka-17", Name: "Merdeka 17", Trigger: VoucherCampaignTriggerBillingCharge,
 		BenefitType: VoucherCampaignBenefitPercentageDiscount, Audience: VoucherCampaignAudienceAll,
 		Currency: "IDR", Value: "17.0000", Budget: campaignString("1000000.0000"),
-		Priority: 100, Timezone: "Asia/Jakarta", StartsAt: start, EndsAt: end,
+		Priority: 100, StartsAt: start, EndsAt: end,
 		Scopes: []VoucherCampaignScope{
 			{ProductType: VoucherCampaignProductApp},
 			{ProductType: VoucherCampaignProductJobs, PlanID: &planID},
@@ -40,7 +40,7 @@ func TestVoucherCampaignResponsesRoundTrip(t *testing.T) {
 		ID: 1, Slug: "first-topup", Name: "First Top-Up 2x", Trigger: VoucherCampaignTriggerTopupSuccess,
 		BenefitType: VoucherCampaignBenefitPercentageBonus, Audience: VoucherCampaignAudienceNeverSuccessfulTopup,
 		Currency: "IDR", Value: "100.0000", PerEventCap: campaignString("81000.0000"),
-		PerUserLimit: campaignInt(1), Priority: 100, Timezone: "Asia/Jakarta", StartsAt: now,
+		PerUserLimit: campaignInt(1), Priority: 100, StartsAt: now,
 		EndsAt: now.Add(24 * time.Hour), Status: VoucherCampaignStatusActive,
 		ReservedAmount: "81000.0000", AppliedAmount: "81000.0000", AvailableAmount: campaignString("838000.0000"),
 		CreatedAt: now, UpdatedAt: now,
@@ -48,7 +48,7 @@ func TestVoucherCampaignResponsesRoundTrip(t *testing.T) {
 	roundTrip(t, "PublicVoucherCampaignResponse", PublicVoucherCampaignResponse{
 		ID: 1, Slug: "first-topup", Name: "First Top-Up 2x", Trigger: VoucherCampaignTriggerTopupSuccess,
 		BenefitType: VoucherCampaignBenefitPercentageBonus, Currency: "IDR", Value: "100.0000",
-		Timezone: "Asia/Jakarta", StartsAt: now, EndsAt: now.Add(24 * time.Hour),
+		StartsAt: now, EndsAt: now.Add(24 * time.Hour),
 		Eligible: true, Availability: VoucherCampaignAvailabilityAvailable,
 	})
 	roundTrip(t, "VoucherApplicationResponse", VoucherApplicationResponse{

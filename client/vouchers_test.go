@@ -18,7 +18,7 @@ func campaignRequest() *types.CreateVoucherCampaignRequest {
 	return &types.CreateVoucherCampaignRequest{
 		Slug: "merdeka-17", Name: "Merdeka 17", Trigger: types.VoucherCampaignTriggerBillingCharge,
 		BenefitType: types.VoucherCampaignBenefitPercentageDiscount, Audience: types.VoucherCampaignAudienceAll,
-		Currency: "IDR", Value: "17.0000", Priority: 100, Timezone: "Asia/Jakarta",
+		Currency: "IDR", Value: "17.0000", Priority: 100,
 		StartsAt: time.Date(2026, 8, 16, 17, 0, 0, 0, time.UTC),
 		EndsAt:   time.Date(2026, 9, 1, 17, 0, 0, 0, time.UTC),
 		Scopes:   []types.VoucherCampaignScope{{ProductType: types.VoucherCampaignProductApp}},

@@ -92,7 +92,6 @@ type CreateVoucherCampaignRequest struct {
 	PerUserLimit *int                       `json:"per_user_limit,omitempty"`
 	Budget       *string                    `json:"budget,omitempty"`
 	Priority     int                        `json:"priority"`
-	Timezone     string                     `json:"timezone"`
 	StartsAt     time.Time                  `json:"starts_at"`
 	EndsAt       time.Time                  `json:"ends_at"`
 	Scopes       []VoucherCampaignScope     `json:"scopes,omitempty"`
@@ -113,7 +112,6 @@ type UpdateVoucherCampaignRequest struct {
 	Budget         *string                  `json:"budget,omitempty"`
 	ClearBudget    bool                     `json:"clear_budget,omitempty"`
 	Priority       *int                     `json:"priority,omitempty"`
-	Timezone       *string                  `json:"timezone,omitempty"`
 	StartsAt       *time.Time               `json:"starts_at,omitempty"`
 	EndsAt         *time.Time               `json:"ends_at,omitempty"`
 	Scopes         *[]VoucherCampaignScope  `json:"scopes,omitempty"`
@@ -141,7 +139,6 @@ type VoucherCampaignResponse struct {
 	PerUserLimit    *int                       `json:"per_user_limit,omitempty"`
 	Budget          *string                    `json:"budget,omitempty"`
 	Priority        int                        `json:"priority"`
-	Timezone        string                     `json:"timezone"`
 	StartsAt        time.Time                  `json:"starts_at"`
 	EndsAt          time.Time                  `json:"ends_at"`
 	Status          VoucherCampaignStatus      `json:"status"`
@@ -166,7 +163,6 @@ type PublicVoucherCampaignResponse struct {
 	Currency            string                      `json:"currency"`
 	Value               string                      `json:"value"`
 	PerEventCap         *string                     `json:"per_event_cap,omitempty"`
-	Timezone            string                      `json:"timezone"`
 	StartsAt            time.Time                   `json:"starts_at"`
 	EndsAt              time.Time                   `json:"ends_at"`
 	Scopes              []VoucherCampaignScope      `json:"scopes"`
