@@ -62,3 +62,23 @@ func TestBillingSummaryResponseRoundTrip(t *testing.T) {
 		},
 	})
 }
+
+func TestPublicChargeResponseVoucherCampaignAmountsAreStrings(t *testing.T) {
+	body, err := json.Marshal(PublicChargeResponse{
+		GrossAmount:    "100.0000",
+		DiscountAmount: "15.2500",
+		Amount:         "84.7500",
+	})
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	for _, field := range []string{
+		`"gross_amount":"100.0000"`,
+		`"discount_amount":"15.2500"`,
+		`"amount":"84.7500"`,
+	} {
+		if !strings.Contains(string(body), field) {
+			t.Errorf("PublicChargeResponse JSON missing %s: %s", field, body)
+		}
+	}
+}

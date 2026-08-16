@@ -1,5 +1,5 @@
-// Package types contains the wire DTOs returned by every user-facing
-// /api/v1/* endpoint a Kumo customer API key (kumo_sk_…) can call.
+// Package types contains Kumo wire DTOs for customer-facing endpoints and
+// protected administrative API surfaces.
 //
 // Conventions:
 //   - JSON tags here are the wire contract. Server and SDK must agree on
@@ -11,8 +11,9 @@
 //     intentionally omitted — validation is the server's concern. Consumers
 //     that want client-side validation can layer it themselves.
 //   - Fields that the server marks json:"-" (DeletedAt, KeyHash, …) are
-//     omitted entirely. Admin-only fields (base_price, margin_*) are never
-//     included; those endpoints are not part of the public API.
+//     omitted entirely. Administrative DTOs expose only the fields required
+//     to operate their API surface; persistence-only financial internals stay
+//     excluded.
 //   - Unknown JSON fields are tolerated by Go's encoder, so the server can
 //     add new optional fields without breaking older SDK consumers.
 package types

@@ -176,7 +176,7 @@ func TestBilling_RoundTrip(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	roundTrip(t, "PublicChargeResponse", PublicChargeResponse{
 		ID: 1, SubscriptionID: 7, ProductType: "vps", PlanName: "vultr-1c-1gb",
-		Amount: "4.99", Currency: "IDR",
+		GrossAmount: "100.0000", DiscountAmount: "15.2500", Amount: "84.7500", Currency: "IDR",
 		PeriodStart: now, PeriodEnd: now, ChargeType: "prepaid", Status: "charged",
 		ReferenceID: "ref-1", CreatedAt: now,
 	})

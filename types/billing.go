@@ -78,6 +78,8 @@ type PublicChargeResponse struct {
 	SubscriptionID uint                       `json:"subscription_id"`
 	ProductType    string                     `json:"product_type"`
 	PlanName       string                     `json:"plan_name"`
+	GrossAmount    string                     `json:"gross_amount"`
+	DiscountAmount string                     `json:"discount_amount"`
 	Amount         string                     `json:"amount"`
 	Currency       string                     `json:"currency"`
 	PeriodStart    time.Time                  `json:"period_start"`

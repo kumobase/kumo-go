@@ -132,7 +132,8 @@ func IsNotFound(err error) bool {
 		codes.OrgNotFound,
 		codes.RegistryRepositoryNotFound, codes.RegistryManifestNotFound, codes.RegistryBlobNotFound,
 		codes.PackageNotFound, codes.PackageVersionNotFound, codes.PackageTagNotFound,
-		codes.APIKeyNotFound:
+		codes.APIKeyNotFound,
+		codes.VoucherCampaignNotFound, codes.VoucherApplicationNotFound:
 		return true
 	}
 	return false
@@ -158,7 +159,9 @@ func IsConflict(err error) bool {
 		codes.ActionInProgress, codes.AutoRenewAlreadyCancelled,
 		codes.OrgSlugTaken, codes.OrgMaxOrganizationsReached, codes.OrgHasRepos, codes.OrgCannotDeleteDefault,
 		codes.RegistryRepositoryAlreadyExists, codes.RegistryTagImmutable, codes.RegistryMaxRepositoriesReached,
-		codes.PackageVersionExists:
+		codes.PackageVersionExists,
+		codes.VoucherCampaignAlreadyExists, codes.VoucherCampaignInvalidState, codes.VoucherCampaignRulesLocked,
+		codes.VoucherCampaignPoolInsufficient, codes.VoucherCampaignReversalInsufficientBalance:
 		return true
 	}
 	return false
