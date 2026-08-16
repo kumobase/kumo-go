@@ -171,6 +171,40 @@ type PublicVoucherCampaignResponse struct {
 	IneligibilityReason string                      `json:"ineligibility_reason,omitempty"`
 }
 
+// PublicVoucherApplicationResponse is the customer-facing view of an
+// application. It omits ledger_transaction_id and failure_reason: internal
+// bookkeeping the customer has no use for, and the shape that keeps a future
+// admin-only field from shipping to customers by default. Mirrors
+// PublicVoucherCampaignResponse.
+type PublicVoucherApplicationResponse struct {
+	ID               uint                                `json:"id"`
+	CampaignID       uint                                `json:"campaign_id"`
+	CampaignSlug     string                              `json:"campaign_slug"`
+	CampaignName     string                              `json:"campaign_name"`
+	Status           VoucherApplicationStatus            `json:"status"`
+	ResolutionAction *VoucherApplicationResolutionAction `json:"resolution_action,omitempty"`
+	SourceType       string                              `json:"source_type"`
+	SourceReference  string                              `json:"source_reference"`
+	GrossAmount      string                              `json:"gross_amount"`
+	BenefitAmount    string                              `json:"benefit_amount"`
+	NetAmount        string                              `json:"net_amount"`
+	Currency         string                              `json:"currency"`
+	AppliedAt        *time.Time                          `json:"applied_at,omitempty"`
+	ReversedAt       *time.Time                          `json:"reversed_at,omitempty"`
+	CreatedAt        time.Time                           `json:"created_at"`
+	UpdatedAt        time.Time                           `json:"updated_at"`
+}
+
+// VoucherCampaignAuditLogResponse is one entry in a campaign's audit trail.
+type VoucherCampaignAuditLogResponse struct {
+	ID          uint      `json:"id"`
+	CampaignID  uint      `json:"campaign_id"`
+	ActorUserID uint      `json:"actor_user_id"`
+	Action      string    `json:"action"`
+	Reason      string    `json:"reason"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type VoucherApplicationResponse struct {
 	ID                  uint                                `json:"id"`
 	CampaignID          uint                                `json:"campaign_id"`

@@ -133,7 +133,7 @@ func IsNotFound(err error) bool {
 		codes.RegistryRepositoryNotFound, codes.RegistryManifestNotFound, codes.RegistryBlobNotFound,
 		codes.PackageNotFound, codes.PackageVersionNotFound, codes.PackageTagNotFound,
 		codes.APIKeyNotFound,
-		codes.VoucherCampaignNotFound, codes.VoucherApplicationNotFound:
+		codes.VoucherCampaignNotFound, codes.VoucherCampaignApplicationNotFound:
 		return true
 	}
 	return false

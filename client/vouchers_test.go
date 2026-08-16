@@ -107,6 +107,11 @@ func TestAdminVoucherCampaignsActions(t *testing.T) {
 			writeVoucherCampaignPage(w, []types.VoucherApplicationResponse{{ID: 7}})
 			return
 		}
+		if r.Method == http.MethodGet && r.URL.Path == "/api/v1/admin/vouchers/campaigns/1/applications/7" {
+			seen["applications/7"] = true
+			writeStruct(w, http.StatusOK, "", "ok", &types.VoucherApplicationResponse{ID: 7})
+			return
+		}
 		if r.Method != http.MethodPost || !strings.HasPrefix(r.URL.Path, "/api/v1/admin/vouchers/campaigns/1/") {
 			http.NotFound(w, r)
 			return
@@ -115,6 +120,10 @@ func TestAdminVoucherCampaignsActions(t *testing.T) {
 		seen[suffix] = true
 		if r.Header.Get("Idempotency-Key") == "" || r.Header.Get("If-Match") != `W/"abc"` {
 			t.Errorf("%s headers idempotency=%q if-match=%q", suffix, r.Header.Get("Idempotency-Key"), r.Header.Get("If-Match"))
+		}
+		if strings.HasPrefix(suffix, "applications/") {
+			writeStruct(w, http.StatusOK, "", "ok", &types.VoucherApplicationResponse{ID: 7})
+			return
 		}
 		writeStruct(w, http.StatusOK, "", "ok", &types.VoucherCampaignResponse{ID: 1})
 	})
@@ -134,15 +143,6 @@ func TestAdminVoucherCampaignsActions(t *testing.T) {
 		"end": func() (*types.VoucherCampaignResponse, error) {
 			return c.AdminVouchers().EndCampaign(ctx, 1, action, opts...)
 		},
-		"applications/7/reverse": func() (*types.VoucherCampaignResponse, error) {
-			return c.AdminVouchers().ReverseApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "refund"}, opts...)
-		},
-		"applications/7/retry": func() (*types.VoucherCampaignResponse, error) {
-			return c.AdminVouchers().RetryApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "retry"}, opts...)
-		},
-		"applications/7/waive": func() (*types.VoucherCampaignResponse, error) {
-			return c.AdminVouchers().WaiveApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "waive"}, opts...)
-		},
 	}
 	for name, call := range calls {
 		if _, err := call(); err != nil {
@@ -152,6 +152,31 @@ func TestAdminVoucherCampaignsActions(t *testing.T) {
 			t.Errorf("%s path not observed", name)
 		}
 	}
+	// The application actions return the application they mutated, so they are
+	// exercised separately from the campaign-shaped calls above.
+	applicationCalls := map[string]func() (*types.VoucherApplicationResponse, error){
+		"applications/7/reverse": func() (*types.VoucherApplicationResponse, error) {
+			return c.AdminVouchers().ReverseApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "refund"}, opts...)
+		},
+		"applications/7/retry": func() (*types.VoucherApplicationResponse, error) {
+			return c.AdminVouchers().RetryApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "retry"}, opts...)
+		},
+		"applications/7/waive": func() (*types.VoucherApplicationResponse, error) {
+			return c.AdminVouchers().WaiveApplication(ctx, 1, 7, &types.VoucherApplicationActionRequest{Reason: "waive"}, opts...)
+		},
+		"applications/7": func() (*types.VoucherApplicationResponse, error) {
+			return c.AdminVouchers().GetApplication(ctx, 1, 7)
+		},
+	}
+	for name, call := range applicationCalls {
+		if _, err := call(); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if !seen[name] {
+			t.Errorf("%s path not observed", name)
+		}
+	}
+
 	applications, meta, err := c.AdminVouchers().ListCampaignApplications(ctx, 1, client.WithPage(2))
 	if err != nil || len(applications) != 1 || meta.Page != 2 {
 		t.Fatalf("ListApplications: err=%v applications=%+v meta=%+v", err, applications, meta)
@@ -159,7 +184,7 @@ func TestAdminVoucherCampaignsActions(t *testing.T) {
 }
 
 func TestVoucherCampaignErrorClassification(t *testing.T) {
-	for _, code := range []string{codes.VoucherCampaignNotFound, codes.VoucherApplicationNotFound} {
+	for _, code := range []string{codes.VoucherCampaignNotFound, codes.VoucherCampaignApplicationNotFound} {
 		if !client.IsNotFound(&client.APIError{StatusCode: http.StatusNotFound, Code: code}) {
 			t.Errorf("IsNotFound(%s) = false", code)
 		}

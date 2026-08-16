@@ -10,12 +10,12 @@ const (
 	ActionInProgress          = "ACTION_IN_PROGRESS"
 	ActionQueued              = "ACTION_QUEUED"
 
-	ProviderNotFound  = "PROVIDER_NOT_FOUND"
-	PlanNotFound      = "PLAN_NOT_FOUND"
-	ProviderDisabled  = "PROVIDER_DISABLED"
-	PlanDisabled      = "PLAN_DISABLED"
-	InvalidRegion     = "INVALID_REGION"
-	MissingRegion     = "MISSING_REGION"
+	ProviderNotFound = "PROVIDER_NOT_FOUND"
+	PlanNotFound     = "PLAN_NOT_FOUND"
+	ProviderDisabled = "PROVIDER_DISABLED"
+	PlanDisabled     = "PLAN_DISABLED"
+	InvalidRegion    = "INVALID_REGION"
+	MissingRegion    = "MISSING_REGION"
 
 	InsufficientBalance      = "INSUFFICIENT_BALANCE"
 	ProviderBalanceIssue     = "PROVIDER_BALANCE_ISSUE"
@@ -23,14 +23,14 @@ const (
 	ServiceUnavailable       = "SERVICE_UNAVAILABLE"
 	QuotaExceeded            = "QUOTA_EXCEEDED"
 
-	VPSUnauthorized       = "UNAUTHORIZED"
-	VPSInvalidRequestBody = "INVALID_REQUEST_BODY"
-	VPSValidationError    = "VALIDATION_ERROR"
-	VPSInvalidServerID    = "INVALID_SERVER_ID"
-	VPSInvalidPagination  = "INVALID_PAGINATION"
+	VPSUnauthorized        = "UNAUTHORIZED"
+	VPSInvalidRequestBody  = "INVALID_REQUEST_BODY"
+	VPSValidationError     = "VALIDATION_ERROR"
+	VPSInvalidServerID     = "INVALID_SERVER_ID"
+	VPSInvalidPagination   = "INVALID_PAGINATION"
 	VPSInvalidStatusFilter = "INVALID_STATUS_FILTER"
-	VPSInvalidTimeFilter  = "INVALID_TIME_FILTER"
-	VPSInternalError      = "INTERNAL_ERROR"
+	VPSInvalidTimeFilter   = "INVALID_TIME_FILTER"
+	VPSInternalError       = "INTERNAL_ERROR"
 
 	// VPSBillingSetupFailed is returned when a server was provisioned on the
 	// provider but its billing subscription could not be created; the rent is

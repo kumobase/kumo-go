@@ -52,11 +52,11 @@ type BuildResponse struct {
 	// LogURL is deprecated and no longer populated by the list or detail
 	// endpoints (it always presigned a short-lived URL the caller usually
 	// never used). Fetch a fresh URL on demand via Builds().GetLogURL.
-	LogURL string `json:"log_url,omitempty"`
-	Error  string `json:"error,omitempty"`
-	CreatedAt   time.Time   `json:"created_at"`
-	StartedAt   *time.Time  `json:"started_at,omitempty"`
-	FinishedAt  *time.Time  `json:"finished_at,omitempty"`
+	LogURL     string     `json:"log_url,omitempty"`
+	Error      string     `json:"error,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	StartedAt  *time.Time `json:"started_at,omitempty"`
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
 }
 
 // CreateGitBuildAppRequest is the body for

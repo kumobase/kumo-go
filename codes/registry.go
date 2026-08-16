@@ -16,7 +16,7 @@ const (
 	RegistryManifestNotFound = "REGISTRY_MANIFEST_NOT_FOUND"
 	RegistryBlobNotFound     = "REGISTRY_BLOB_NOT_FOUND"
 
-	RegistrySuspended         = "REGISTRY_SUSPENDED"
+	RegistrySuspended              = "REGISTRY_SUSPENDED"
 	RegistryMaxRepositoriesReached = "REGISTRY_MAX_REPOSITORIES_REACHED"
 
 	// RegistryRepositorySystemOwned — the repository is owned by the platform

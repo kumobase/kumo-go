@@ -9,6 +9,6 @@ const (
 	VoucherCampaignInvalidRule                 = "VOUCHER_CAMPAIGN_INVALID_RULE"
 	VoucherCampaignInvalidScope                = "VOUCHER_CAMPAIGN_INVALID_SCOPE"
 	VoucherCampaignPoolInsufficient            = "VOUCHER_CAMPAIGN_POOL_INSUFFICIENT"
-	VoucherApplicationNotFound                 = "VOUCHER_CAMPAIGN_APPLICATION_NOT_FOUND"
+	VoucherCampaignApplicationNotFound         = "VOUCHER_CAMPAIGN_APPLICATION_NOT_FOUND"
 	VoucherCampaignReversalInsufficientBalance = "VOUCHER_CAMPAIGN_REVERSAL_INSUFFICIENT_BALANCE"
 )

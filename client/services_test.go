@@ -42,7 +42,7 @@ func TestSecrets_Smoke(t *testing.T) {
 	ctx := context.Background()
 
 	created, err := c.Secrets().Create(ctx, &types.CreateSecretRequest{
-		RequestSecretBase: types.RequestSecretBase{Name: "db", Type: types.SecretTypeEnvVar},
+		RequestSecretBase:    types.RequestSecretBase{Name: "db", Type: types.SecretTypeEnvVar},
 		EnvironmentVariables: []types.EnvironmentVariable{{Key: "URL", Value: "x"}},
 	})
 	if err != nil || created.ID != 5 {

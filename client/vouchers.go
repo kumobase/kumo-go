@@ -103,21 +103,45 @@ func (s *AdminVouchersService) ListCampaignApplications(ctx context.Context, id 
 	return out, meta, nil
 }
 
-func (s *AdminVouchersService) ReverseApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherCampaignResponse, error) {
+// The three application actions return the APPLICATION they mutated, not the
+// campaign: it is the application's status, resolution_action and timestamps
+// that change, and there is no other way to observe the result of your own
+// write short of re-listing and scanning.
+
+func (s *AdminVouchersService) ReverseApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherApplicationResponse, error) {
 	return s.writeApplicationAction(ctx, campaignID, applicationID, "reverse", req, opts...)
 }
 
-func (s *AdminVouchersService) RetryApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherCampaignResponse, error) {
+func (s *AdminVouchersService) RetryApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherApplicationResponse, error) {
 	return s.writeApplicationAction(ctx, campaignID, applicationID, "retry", req, opts...)
 }
 
-func (s *AdminVouchersService) WaiveApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherCampaignResponse, error) {
+func (s *AdminVouchersService) WaiveApplication(ctx context.Context, campaignID, applicationID uint, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherApplicationResponse, error) {
 	return s.writeApplicationAction(ctx, campaignID, applicationID, "waive", req, opts...)
 }
 
-func (s *AdminVouchersService) writeApplicationAction(ctx context.Context, campaignID, applicationID uint, action string, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherCampaignResponse, error) {
+// GetApplication fetches a single application, so a caller can poll one without
+// paging the whole list.
+func (s *AdminVouchersService) GetApplication(ctx context.Context, campaignID, applicationID uint) (*types.VoucherApplicationResponse, error) {
+	path := fmt.Sprintf("%s/%d/applications/%d", adminVoucherCampaignsPath, campaignID, applicationID)
+	var out types.VoucherApplicationResponse
+	if _, _, err := s.c.do(ctx, "GET", path, nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (s *AdminVouchersService) writeApplicationAction(ctx context.Context, campaignID, applicationID uint, action string, req *types.VoucherApplicationActionRequest, opts ...WriteOption) (*types.VoucherApplicationResponse, error) {
 	path := fmt.Sprintf("%s/%d/applications/%d/%s", adminVoucherCampaignsPath, campaignID, applicationID, action)
-	return s.writeCampaign(ctx, "POST", path, req, opts...)
+	wopts, err := resolveWriteOpts(opts)
+	if err != nil {
+		return nil, err
+	}
+	var out types.VoucherApplicationResponse
+	if _, _, err = s.c.do(ctx, "POST", path, req, &wopts, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (s *AdminVouchersService) writeCampaign(ctx context.Context, method, path string, body any, opts ...WriteOption) (*types.VoucherCampaignResponse, error) {

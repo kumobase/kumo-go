@@ -47,24 +47,24 @@ type RateTicketRequest struct {
 // TicketResponse is the detail shape returned by GET /api/v1/tickets/:id.
 // Messages is populated on the detail endpoint and omitted from list rows.
 type TicketResponse struct {
-	ID           uint              `json:"id"`
-	DisplayID    string            `json:"display_id"`
-	Subject      string            `json:"subject"`
-	Description  string            `json:"description"`
-	Category     string            `json:"category"`
-	Priority     string            `json:"priority"`
-	Status       string            `json:"status"`
-	AssignedTo   *uint             `json:"assigned_to,omitempty"`
-	AssignedName string            `json:"assigned_name,omitempty"`
-	ResolvedAt   *time.Time        `json:"resolved_at,omitempty"`
-	ClosedAt     *time.Time        `json:"closed_at,omitempty"`
-	CreatedAt    time.Time         `json:"created_at"`
-	UpdatedAt    time.Time         `json:"updated_at"`
+	ID           uint       `json:"id"`
+	DisplayID    string     `json:"display_id"`
+	Subject      string     `json:"subject"`
+	Description  string     `json:"description"`
+	Category     string     `json:"category"`
+	Priority     string     `json:"priority"`
+	Status       string     `json:"status"`
+	AssignedTo   *uint      `json:"assigned_to,omitempty"`
+	AssignedName string     `json:"assigned_name,omitempty"`
+	ResolvedAt   *time.Time `json:"resolved_at,omitempty"`
+	ClosedAt     *time.Time `json:"closed_at,omitempty"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 	// Rating (1..5), RatingComment and RatedAt carry the customer's CSAT
 	// feedback once a resolved/closed ticket has been rated; nil/empty until then.
-	Rating        *int       `json:"rating,omitempty"`
-	RatingComment string     `json:"rating_comment,omitempty"`
-	RatedAt       *time.Time `json:"rated_at,omitempty"`
+	Rating        *int              `json:"rating,omitempty"`
+	RatingComment string            `json:"rating_comment,omitempty"`
+	RatedAt       *time.Time        `json:"rated_at,omitempty"`
 	Messages      []MessageResponse `json:"messages,omitempty"`
 }
 

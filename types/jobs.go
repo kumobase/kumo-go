@@ -98,11 +98,11 @@ type CreateJobRequest struct {
 	AppID   *uint  `json:"app_id,omitempty"`
 	AppName string `json:"app_name,omitempty"`
 
-	Image       string                `json:"image,omitempty"`
-	Command     []string              `json:"command,omitempty"`
-	Args        []string              `json:"args,omitempty"`
-	Env         []EnvironmentVariable `json:"env,omitempty"`
-	SecretRefs  []JobSecretRef        `json:"secret_refs,omitempty"`
+	Image      string                `json:"image,omitempty"`
+	Command    []string              `json:"command,omitempty"`
+	Args       []string              `json:"args,omitempty"`
+	Env        []EnvironmentVariable `json:"env,omitempty"`
+	SecretRefs []JobSecretRef        `json:"secret_refs,omitempty"`
 
 	Schedule              string               `json:"schedule,omitempty"`
 	Timezone              string               `json:"timezone,omitempty"`
@@ -123,11 +123,11 @@ type UpdateJobRequest struct {
 	Env        []EnvironmentVariable `json:"env,omitempty"`
 	SecretRefs []JobSecretRef        `json:"secret_refs,omitempty"`
 
-	Schedule              *string               `json:"schedule,omitempty"`
-	Timezone              string                `json:"timezone,omitempty"`
-	ConcurrencyPolicy     JobConcurrencyPolicy  `json:"concurrency_policy,omitempty"`
-	ActiveDeadlineSeconds int                   `json:"active_deadline_seconds,omitempty"`
-	BackoffLimit          *int                  `json:"backoff_limit,omitempty"`
+	Schedule              *string              `json:"schedule,omitempty"`
+	Timezone              string               `json:"timezone,omitempty"`
+	ConcurrencyPolicy     JobConcurrencyPolicy `json:"concurrency_policy,omitempty"`
+	ActiveDeadlineSeconds int                  `json:"active_deadline_seconds,omitempty"`
+	BackoffLimit          *int                 `json:"backoff_limit,omitempty"`
 }
 
 // JobResourceTemplate is the slimmed projection of the pinned
@@ -188,11 +188,11 @@ type JobResponse struct {
 	ActiveDeadlineSeconds int                  `json:"active_deadline_seconds"`
 	BackoffLimit          int                  `json:"backoff_limit"`
 
-	ResourceTemplate     JobResourceTemplate `json:"resource_template"`
-	Suspended            bool                `json:"suspended"`
-	DeploymentStatus     JobDeploymentStatus `json:"deployment_status"`
-	LastExecutionAt      *time.Time          `json:"last_execution_at,omitempty"`
-	NextRunTimes         []time.Time         `json:"next_run_times,omitempty"`
+	ResourceTemplate JobResourceTemplate `json:"resource_template"`
+	Suspended        bool                `json:"suspended"`
+	DeploymentStatus JobDeploymentStatus `json:"deployment_status"`
+	LastExecutionAt  *time.Time          `json:"last_execution_at,omitempty"`
+	NextRunTimes     []time.Time         `json:"next_run_times,omitempty"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -202,17 +202,17 @@ type JobResponse struct {
 // Heavy fields (Env, SecretRefs, NextRunTimes) are omitted to keep list
 // responses cheap; fetch by id-or-name for the full JobResponse.
 type JobListItem struct {
-	ID                uint                `json:"id"`
-	Name              string              `json:"name"`
-	Kind              JobKind             `json:"kind"`
-	AppID             *uint               `json:"app_id,omitempty"`
-	Schedule          string              `json:"schedule,omitempty"`
-	Timezone          string              `json:"timezone"`
-	Suspended         bool                `json:"suspended"`
-	DeploymentStatus  JobDeploymentStatus `json:"deployment_status"`
-	LastExecutionAt   *time.Time          `json:"last_execution_at,omitempty"`
-	CreatedAt         time.Time           `json:"created_at"`
-	UpdatedAt         time.Time           `json:"updated_at"`
+	ID               uint                `json:"id"`
+	Name             string              `json:"name"`
+	Kind             JobKind             `json:"kind"`
+	AppID            *uint               `json:"app_id,omitempty"`
+	Schedule         string              `json:"schedule,omitempty"`
+	Timezone         string              `json:"timezone"`
+	Suspended        bool                `json:"suspended"`
+	DeploymentStatus JobDeploymentStatus `json:"deployment_status"`
+	LastExecutionAt  *time.Time          `json:"last_execution_at,omitempty"`
+	CreatedAt        time.Time           `json:"created_at"`
+	UpdatedAt        time.Time           `json:"updated_at"`
 }
 
 // ResponseJobAsync is the 202 payload for POST/PATCH/DELETE on /api/v1/jobs.

@@ -42,7 +42,7 @@ const (
 // (e.g. "12.5000") — mirrors the jobs PricePerHour convention; never float.
 // Currency is the ISO code for that rate (always "IDR" today).
 type RunnerSpecResponse struct {
-	Label          string `json:"label"`        // e.g. "kumo-2c-4g" — use in runs-on
+	Label          string `json:"label"` // e.g. "kumo-2c-4g" — use in runs-on
 	DisplayName    string `json:"display_name"`
 	CPU            int    `json:"cpu"`
 	MemoryMB       int    `json:"memory_mb"`
@@ -92,6 +92,6 @@ type RunnerJobResponse struct {
 	Conclusion string         `json:"conclusion,omitempty"`
 
 	QueuedAt   time.Time  `json:"queued_at"`
-	StartedAt  *time.Time `json:"started_at,omitempty"`  // when the runner registered
+	StartedAt  *time.Time `json:"started_at,omitempty"` // when the runner registered
 	FinishedAt *time.Time `json:"finished_at,omitempty"`
 }
