@@ -24,6 +24,10 @@ func TestVoucherCampaignRequestsRoundTrip(t *testing.T) {
 			{ProductType: VoucherCampaignProductJobs, PlanID: &planID},
 			{ProductType: VoucherCampaignProductStorage},
 			{ProductType: VoucherCampaignProductContainerRegistry},
+			{ProductType: VoucherCampaignProductVPS},
+			{ProductType: VoucherCampaignProductDatabase},
+			{ProductType: VoucherCampaignProductVMRunners},
+			{ProductType: VoucherCampaignProductPackages},
 		},
 	}
 	roundTrip(t, "CreateVoucherCampaignRequest", req)
@@ -31,6 +35,39 @@ func TestVoucherCampaignRequestsRoundTrip(t *testing.T) {
 		Value: campaignString("20.0000"), PerUserLimit: campaignInt(1), ClearBudget: true,
 	})
 	roundTrip(t, "VoucherApplicationActionRequest", VoucherApplicationActionRequest{Reason: "operator action"})
+}
+
+func TestVoucherCampaignProductTypesAreComplete(t *testing.T) {
+	all := AllVoucherCampaignProductTypes()
+	if len(all) != 8 {
+		t.Fatalf("expected 8 campaign product types, got %d: %v", len(all), all)
+	}
+	seen := map[VoucherCampaignProductType]bool{}
+	for _, product := range all {
+		if seen[product] {
+			t.Errorf("duplicate product type %q", product)
+		}
+		seen[product] = true
+		if !product.Valid() {
+			t.Errorf("product type %q returned from AllVoucherCampaignProductTypes but is not Valid", product)
+		}
+	}
+	// The string values are the wire contract and are compared against the
+	// server's billing product types as plain strings. Changing one silently
+	// stops a campaign from ever matching that product.
+	for _, want := range []VoucherCampaignProductType{
+		"vps", "app", "database", "storage", "container_registry", "jobs", "vm_runners", "packages",
+	} {
+		if !seen[want] {
+			t.Errorf("missing product type %q", want)
+		}
+	}
+	if VoucherCampaignProductType("bogus").Valid() {
+		t.Error("unknown product type reported as valid")
+	}
+	if VoucherCampaignProductType("").Valid() {
+		t.Error("empty product type reported as valid")
+	}
 }
 
 func TestVoucherCampaignResponsesRoundTrip(t *testing.T) {

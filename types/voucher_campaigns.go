@@ -65,6 +65,11 @@ const (
 	VoucherApplicationResolutionWaive VoucherApplicationResolutionAction = "waive"
 )
 
+// VoucherCampaignProductType is the set of billing products a campaign may be
+// scoped to. The string values mirror the server's billing product types byte
+// for byte -- campaign matching compares them as plain strings -- so the two
+// lists must stay in step. The server pins them together with an exhaustiveness
+// test rather than trusting review.
 type VoucherCampaignProductType string
 
 const (
@@ -72,7 +77,38 @@ const (
 	VoucherCampaignProductJobs              VoucherCampaignProductType = "jobs"
 	VoucherCampaignProductStorage           VoucherCampaignProductType = "storage"
 	VoucherCampaignProductContainerRegistry VoucherCampaignProductType = "container_registry"
+	VoucherCampaignProductVPS               VoucherCampaignProductType = "vps"
+	VoucherCampaignProductDatabase          VoucherCampaignProductType = "database"
+	VoucherCampaignProductVMRunners         VoucherCampaignProductType = "vm_runners"
+	VoucherCampaignProductPackages          VoucherCampaignProductType = "packages"
 )
+
+// AllVoucherCampaignProductTypes returns every product a campaign may be scoped
+// to. Eligibility is deliberately not narrowed here: a discount campaign must
+// name its scopes explicitly, so which products a promotion touches is a
+// configuration decision, not a compile-time one.
+func AllVoucherCampaignProductTypes() []VoucherCampaignProductType {
+	return []VoucherCampaignProductType{
+		VoucherCampaignProductVPS,
+		VoucherCampaignProductApp,
+		VoucherCampaignProductDatabase,
+		VoucherCampaignProductStorage,
+		VoucherCampaignProductContainerRegistry,
+		VoucherCampaignProductJobs,
+		VoucherCampaignProductVMRunners,
+		VoucherCampaignProductPackages,
+	}
+}
+
+// Valid reports whether p is a known product type.
+func (p VoucherCampaignProductType) Valid() bool {
+	for _, known := range AllVoucherCampaignProductTypes() {
+		if p == known {
+			return true
+		}
+	}
+	return false
+}
 
 type VoucherCampaignScope struct {
 	ProductType VoucherCampaignProductType `json:"product_type"`
